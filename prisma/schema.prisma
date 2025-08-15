@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  recruiter
+  applicant
+}
+
+enum Industry {
+  EdTech
+  FinTech
+  HealthTech
+  SaaS
+  ECommerce
+  Gaming
+  Logistics
+  RealEstate
+  CyberSecurity
+  Consulting
+  Manufacturing
+  Media
+  Travel
+  AI
+  Other
+}
+
+enum Experience {
+  Fresher
+  OneToTwoYears
+  TwoToThreeYears
+  ThreeToFiveYears
+  FiveToSevenYears
+  SevenPlusYears
+}
+
+enum Status {
+  Student
+  SeachingForJob
+  WorkingProfessional
+}
+
+enum JobPreferences {
+  SoftwareEngineer
+  WebDeveloper
+  DataAnalyst
+  DataScientist
+  UIUXDesigner
+  VideoEditor
+  Sales
+  Marketing
+  ProductManager
+  QAEngineer
+  DevOpsEngineer
+  BusinessAnalyst
+  ContentWriter
+  HR
+  CustomerSupport
+  Operations
+  Other
+}
+
+enum ApplicationStatus {
+  Applied
+  Reviewing
+  Accepted
+  Rejected
+}
+
+enum WorkStatus {
+  Remote
+  Offline
+}
+
+model User {
+  id               String            @id @default(uuid())
+  firstName        String
+  lastName         String
+  email            String            @unique
+  role             Role
+  createdAt        DateTime          @default(now())
+  recruiterProfile RecruiterProfile?
+  applicantProfile ApplicantProfile?
+  jobsCreated      Job[]
+  applications     Application[]
+}
+
+model RecruiterProfile {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String   @unique
+  companyName     String
+  companyWebsite  String?
+  industry        Industry
+  position        String?
+  linkedInProfile String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ApplicantProfile {
+  id              String           @id @default(uuid())
+  user            User             @relation(fields: [userId], references: [id])
+  userId          String           @unique
+  phone           String
+  age             Int
+  education       String // B.E., B.Tech, etc.
+  instituteName   String
+  currentCompany  String?
+  currentStatus   Status
+  experience      Experience
+  jobPreferences  JobPreferences[]
+  linkedInProfile String?
+  xProfile        String?
+  githubProfile   String?
+  city            String
+  state           String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Job {
+  id             String        @id @default(uuid())
+  title          String
+  description    String
+  location       String
+  experience     Experience
+  salary         String
+  requiredSkills String[]
+  workStatus     WorkStatus
+  createdById    String
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  applications   Application[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Application {
+  id            String            @id @default(uuid())
+  status        ApplicationStatus @default(Applied)
+  jobId         String
+  job           Job               @relation(fields: [jobId], references: [id])
+  applicantId   String
+  applicant     User              @relation(fields: [applicantId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  InterviewInfo InterviewInfo[]
+}
+
+model InterviewInfo {
+  id            String      @id @default(uuid())
+  application   Application @relation(fields: [applicationId], references: [id])
+  applicationId String
+  resumeSummary String
+  qnas          QnA[]
+  createdAt     DateTime    @default(now())
+  startTime     DateTime?
+}
+
+model QnA {
+  id              String        @id @default(uuid())
+  interviewInfo   InterviewInfo @relation(fields: [interviewInfoId], references: [id])
+  interviewInfoId String
+  question        String
+  answer          String
+  createdAt       DateTime      @default(now())
+}
