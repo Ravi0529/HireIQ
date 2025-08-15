@@ -83,6 +83,7 @@ model User {
   lastName         String
   email            String            @unique
   role             Role
+  password         String
   createdAt        DateTime          @default(now())
   recruiterProfile RecruiterProfile?
   applicantProfile ApplicantProfile?
