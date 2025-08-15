@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
+export { default } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
+
+export const middleware = async (req: NextRequest) => {
+  const token = await getToken({ req: req });
+  const url = req.nextUrl;
+
+  if (token && (url.pathname === "/login" || url.pathname === "/")) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  if (token && url.pathname === "/signup") {
+    return NextResponse.redirect(new URL("/profile", req.url));
+  }
+
+  return NextResponse.next();
+};
+
+export const config = {
+  matcher: [
+    "/login",
+    "/signup",
+    "/",
+    "/profile",
+    "/profile/:path",
+    "/dashboard/:path*",
+    "/start/:path*",
+  ],
+};
