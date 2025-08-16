@@ -3,7 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "crypto";
 import { Role } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
@@ -56,42 +55,28 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         if (!user.email) {
-          throw new Error("No email associated with this Google account.");
+          return "/signup";
+        }
+
+        const existingUser = await prisma.user.findUnique({
+          where: {
+            email: user.email,
+          },
+        });
+
+        if (!existingUser) {
+          return "/signup";
         }
 
         const nameParts = profile?.name?.trim().split(" ") ?? [];
         const firstName = nameParts[0] || "FirstName";
         const lastName = nameParts.slice(1).join(" ") || "LastName";
 
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-
-        if (!existingUser) {
-          const randomPassword = randomBytes(16).toString("hex");
-          await prisma.user.create({
-            data: {
-              role: Role.applicant,
-              firstName,
-              lastName,
-              email: user.email,
-              password: randomPassword,
-              image: user.image ?? null,
-            },
+        if (!existingUser.firstName || !existingUser.lastName) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: { firstName, lastName, image: user.image },
           });
-        } else {
-          if (!existingUser.firstName || !existingUser.lastName) {
-            await prisma.user.update({
-              where: {
-                id: existingUser.id,
-              },
-              data: {
-                firstName,
-                lastName,
-                image: user.image,
-              },
-            });
-          }
         }
       }
       return true;

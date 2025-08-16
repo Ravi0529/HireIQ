@@ -14,6 +14,16 @@ export const middleware = async (req: NextRequest) => {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
 
+  if (
+    !token &&
+    (url.pathname === "/profile" ||
+      url.pathname === "/profile/:path*" ||
+      url.pathname === "/dashboard/:path*" ||
+      url.pathname === "/job/:path*")
+  ) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
   return NextResponse.next();
 };
 
@@ -23,8 +33,8 @@ export const config = {
     "/signup",
     "/",
     "/profile",
-    "/profile/:path",
+    "/profile/:path*",
     "/dashboard/:path*",
-    "/start/:path*",
+    "/job/:path*",
   ],
 };
