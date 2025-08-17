@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import axios, { AxiosError } from "axios";
 import {
   Card,
   CardContent,
@@ -40,13 +39,10 @@ export default function SignUpPage() {
       console.log(response);
       toast.success("Logged in successfully!");
       router.push("/dashboard");
-    } catch (error: unknown) {
-      const errorMessage = error as AxiosError<{ error: string }>;
-      const message =
-        errorMessage.response?.data?.error ||
-        "Something went wrong. Please try again.";
-      setError(message);
-      toast.error(message);
+    } catch (error) {
+      console.log(error);
+      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
