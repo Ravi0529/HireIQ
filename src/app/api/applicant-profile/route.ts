@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, User } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import prisma from "@/lib/prisma";
+import redis from "@/lib/redis";
+
+const getProfileCacheKey = (userId: string) => `applicant:profile:${userId}`;
 
 export const GET = async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
@@ -20,6 +23,20 @@ export const GET = async (req: NextRequest) => {
   }
 
   try {
+    const cacheKey = getProfileCacheKey(user.id);
+    const cachedProfile = await redis.get(cacheKey);
+
+    if (cachedProfile) {
+      console.log("Serving applicant profile from cache");
+      return new NextResponse(cachedProfile, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+
     const profile = await prisma.applicantProfile.findUnique({
       where: {
         userId: user.id,
@@ -47,16 +64,21 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
-    return new NextResponse(
-      JSON.stringify({
-        success: true,
-        profile,
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const responseData = JSON.stringify({
+      success: true,
+      profile,
+    });
+
+    await redis.setex(cacheKey, 86400, responseData);
+    console.log("Stored recruiter profile in cache");
+
+    return new NextResponse(responseData, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Cache": "MISS",
+      },
+    });
   } catch (error) {
     console.error("Error fetching applicant profile:", error);
     return NextResponse.json(
@@ -165,6 +187,10 @@ export const POST = async (req: NextRequest) => {
       : await prisma.applicantProfile.create({
           data: payload,
         });
+
+    const cacheKey = getProfileCacheKey(user.id);
+    await redis.del(cacheKey);
+    console.log("Invalidated applicant profile cache after update");
 
     return new NextResponse(
       JSON.stringify({
