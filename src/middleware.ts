@@ -7,7 +7,7 @@ export const middleware = async (req: NextRequest) => {
   const url = req.nextUrl;
 
   if (token && (url.pathname === "/login" || url.pathname === "/")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/companies", req.url));
   }
 
   if (token && url.pathname === "/signup") {
@@ -17,8 +17,7 @@ export const middleware = async (req: NextRequest) => {
   if (
     !token &&
     (url.pathname === "/profile" ||
-      url.pathname === "/profile/:path*" ||
-      url.pathname === "/dashboard/:path*" ||
+      url.pathname === "/companies" ||
       url.pathname === "/job/:path*")
   ) {
     return NextResponse.redirect(new URL("/login", req.url));
@@ -28,13 +27,5 @@ export const middleware = async (req: NextRequest) => {
 };
 
 export const config = {
-  matcher: [
-    "/login",
-    "/signup",
-    "/",
-    "/profile",
-    "/profile/:path*",
-    "/dashboard/:path*",
-    "/job/:path*",
-  ],
+  matcher: ["/login", "/signup", "/", "/profile", "/companies", "/job/:path*"],
 };

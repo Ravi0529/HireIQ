@@ -19,7 +19,7 @@ import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export default function SignUpPage() {
+export default function LoginPage() {
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ export default function SignUpPage() {
       });
       console.log(response);
       toast.success("Logged in successfully!");
-      router.push("/dashboard");
+      router.push("/companies");
     } catch (error) {
       console.log(error);
       setError("Something went wrong. Please try again.");
@@ -50,7 +50,7 @@ export default function SignUpPage() {
 
   const handleOAuthSignIn = async (provider: "google") => {
     setLoading(true);
-    await signIn(provider, { callbackUrl: "/dashboard" });
+    await signIn(provider, { callbackUrl: "/companies" });
     setLoading(false);
   };
 
@@ -163,17 +163,17 @@ export default function SignUpPage() {
           <CardFooter className="flex flex-col gap-3 px-6 pb-6 mt-3">
             <Button
               type="submit"
-              className="w-full h-10 bg-blue-600 hover:bg-blue-700"
+              className="w-full h-10 bg-blue-600 hover:bg-blue-700 cursor-pointer"
               disabled={loading}
             >
               {loading ? (
                 <>
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                  Entering Dashboard...
+                  Fetching Companies...
                 </>
               ) : (
                 <>
-                  Enter Dashboard
+                  Fetch Companies
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
