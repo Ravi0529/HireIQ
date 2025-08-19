@@ -39,7 +39,7 @@ export default function NotFound() {
   }, [session, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-0 shadow-lg rounded-2xl overflow-hidden">
         <div className="bg-blue-600 p-1"></div>
 
