@@ -9,7 +9,7 @@ import { User } from "next-auth";
 
 export default function Navbar() {
   const { data: session } = useSession();
-  const user: User = session?.user as User;
+  const user: User = session?.user;
 
   return (
     <nav className="sticky top-0 z-30 w-full bg-white border-b border-gray-200 shadow-sm font-sans">
