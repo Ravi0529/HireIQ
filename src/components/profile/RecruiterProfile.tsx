@@ -144,7 +144,6 @@ export default function RecruiterProfile() {
 
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6 px-6">
-              {/* User Info Section */}
               {user && (
                 <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
                   <Avatar className="h-16 w-16 border-2 border-blue-300">
@@ -170,7 +169,6 @@ export default function RecruiterProfile() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Company Name */}
                 <div className="space-y-2">
                   <Label htmlFor="companyName" className="text-gray-700">
                     <Building2 className="inline h-4 w-4 mr-1" />
@@ -190,7 +188,6 @@ export default function RecruiterProfile() {
                   </div>
                 </div>
 
-                {/* Industry */}
                 <div className="space-y-2">
                   <Label htmlFor="industry" className="text-gray-700">
                     Industry <span className="text-red-600">*</span>
@@ -220,7 +217,6 @@ export default function RecruiterProfile() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Company Website */}
                 <div className="space-y-2">
                   <Label htmlFor="companyWebsite" className="text-gray-700">
                     <Globe className="inline h-4 w-4 mr-1" />
@@ -239,7 +235,6 @@ export default function RecruiterProfile() {
                   </div>
                 </div>
 
-                {/* Position */}
                 <div className="space-y-2">
                   <Label htmlFor="position" className="text-gray-700">
                     <User className="inline h-4 w-4 mr-1" />
@@ -260,7 +255,6 @@ export default function RecruiterProfile() {
                 </div>
               </div>
 
-              {/* LinkedIn Profile */}
               <div className="space-y-2">
                 <Label htmlFor="linkedInProfile" className="text-gray-700">
                   <Linkedin className="inline h-4 w-4 mr-1" />

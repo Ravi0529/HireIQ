@@ -248,7 +248,6 @@ export default function ApplicantProfile() {
                   </div>
                 </div>
 
-                {/* Age */}
                 <div className="space-y-2">
                   <Label htmlFor="age" className="text-gray-700">
                     <Calendar className="inline h-4 w-4 mr-1" />
