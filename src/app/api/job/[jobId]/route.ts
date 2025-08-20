@@ -6,6 +6,17 @@ import redis from "@/lib/redis";
 
 const getParticularJobCacheKey = (id: string) => `job:${id}`;
 
+const invalidateJobCache = async (jobId: string) => {
+  await redis.del(getParticularJobCacheKey(jobId));
+  console.log(`Invalidated cache for job: ${jobId}`);
+
+  const jobListKeys = await redis.keys("jobs:page:*");
+  if (jobListKeys.length > 0) {
+    await redis.del(...jobListKeys);
+    console.log("Invalidated all jobs list cache");
+  }
+};
+
 export const GET = async (
   req: NextRequest,
   { params }: { params: { jobId: string } }
@@ -99,6 +110,199 @@ export const GET = async (
     });
   } catch (error) {
     console.error("Error fetching job:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+export const PUT = async (
+  req: NextRequest,
+  { params }: { params: { jobId: string } }
+) => {
+  const session = await getServerSession(authOptions);
+  const user: User = session?.user;
+
+  const { jobId } = await params;
+
+  if (!session || !session.user || !user.email) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Unauthorized",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
+  if (user?.role?.toLowerCase() !== "recruiter") {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Forbidden - Only recruiters can manage jobs",
+      },
+      {
+        status: 403,
+      }
+    );
+  }
+
+  try {
+    const job = await prisma.job.findUnique({
+      where: {
+        id: jobId,
+      },
+    });
+
+    if (!job) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Job not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (job.createdById !== user.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden - You can only edit your own jobs",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    const data = await req.json();
+    if (!data?.title || !data?.description) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Missing required fields",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: {
+        id: jobId,
+      },
+      data: {
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        experience: data.experience,
+        salary: data.salary,
+        requiredSkills: data.requiredSkills,
+        workStatus: data.workStatus,
+        updatedAt: new Date(),
+      },
+    });
+
+    await invalidateJobCache(jobId);
+
+    return NextResponse.json({
+      success: true,
+      job: updatedJob,
+    });
+  } catch (error) {
+    console.error("Error updating job:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+export const DELETE = async (
+  req: NextRequest,
+  { params }: { params: { jobId: string } }
+) => {
+  const session = await getServerSession(authOptions);
+  const user: User = session?.user;
+
+  const { jobId } = await params;
+
+  if (!session || !session.user || !user.email) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Unauthorized",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
+  try {
+    const job = await prisma.job.findUnique({
+      where: {
+        id: jobId,
+      },
+    });
+
+    if (!job) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Job not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (job.createdById !== user.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden - You can only delete your own jobs",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    await prisma.job.delete({
+      where: {
+        id: jobId,
+      },
+    });
+
+    await invalidateJobCache(jobId);
+
+    return NextResponse.json({
+      success: true,
+      message: "Job deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting job:", error);
     return NextResponse.json(
       {
         success: false,
