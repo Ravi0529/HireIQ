@@ -8,12 +8,12 @@ const getParticularJobCacheKey = (id: string) => `job:${id}`;
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { jobId: string } }
 ) => {
   const session = await getServerSession(authOptions);
   const user: User = session?.user;
 
-  const { id: jobId } = await params;
+  const { jobId } = await params;
 
   if (!session || !session.user || !user.email) {
     return NextResponse.json(
