@@ -86,7 +86,7 @@ export const GET = async (req: NextRequest) => {
       },
     });
 
-    await redis.setex(cacheKey, 604800, responseData);
+    await redis.set(cacheKey, responseData, "EX", 604800);
     console.log(`Stored jobs page ${page} in cache for 7 days`);
 
     return new NextResponse(responseData, {

@@ -69,7 +69,7 @@ export const GET = async (req: NextRequest) => {
       profile,
     });
 
-    await redis.setex(cacheKey, 86400, responseData);
+    await redis.set(cacheKey, responseData, "EX", 86400);
     console.log("Stored recruiter profile in cache");
 
     return new NextResponse(responseData, {
