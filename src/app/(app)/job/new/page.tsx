@@ -1,14 +1,16 @@
 "use client";
 
-import RecruiterCompanies from "@/components/companies/RecruiterCompanies";
-import ApplicantCompanies from "@/components/companies/ApplicantCompanies";
+import JobForm from "@/components/jobs/JobForm";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert, User } from "lucide-react";
 
-export default function CompaniesPage() {
+export default function NewJobPostPage() {
   const { data: session, status } = useSession();
-  const role = session?.user?.role as "applicant" | "recruiter" | undefined;
+  const role = session?.user?.role as "recruiter" | "applicant" | undefined;
+
+  const router = useRouter();
 
   if (status === "loading") {
     return (
@@ -17,7 +19,7 @@ export default function CompaniesPage() {
           <div className="bg-blue-600 p-1"></div>
           <CardContent className="p-8 flex flex-col items-center justify-center">
             <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
-            <p className="text-gray-600 text-center">Loading companies...</p>
+            <p className="text-gray-600 text-center">Loading Job form...</p>
           </CardContent>
         </Card>
       </div>
@@ -50,11 +52,11 @@ export default function CompaniesPage() {
   }
 
   if (role === "recruiter") {
-    return <RecruiterCompanies />;
+    return <JobForm />;
   }
 
   if (role === "applicant") {
-    return <ApplicantCompanies />;
+    router.push("/companies");
   }
 
   return (
