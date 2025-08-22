@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
+import type { RecruiterProfile } from "@/types/recruiter";
 
 const INDUSTRY_OPTIONS = [
   { label: "EdTech", value: "EdTech" },
@@ -62,7 +63,7 @@ export default function RecruiterProfile() {
     setLoading(true);
     axios
       .get("/api/recruiter-profile")
-      .then((res: AxiosResponse<any>) => {
+      .then((res: AxiosResponse<{ profile: RecruiterProfile }>) => {
         const data = res.data.profile;
         setCompanyName(data.companyName || "");
         setCompanyWebsite(data.companyWebsite || "");
@@ -91,7 +92,7 @@ export default function RecruiterProfile() {
       return;
     }
 
-    const payload: Record<string, any> = {
+    const payload: Partial<RecruiterProfile> = {
       companyName,
       industry,
     };
@@ -104,12 +105,9 @@ export default function RecruiterProfile() {
       await axios.post("/api/recruiter-profile", payload);
       toast.success("Profile saved successfully.");
       router.replace("/companies");
-    } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.error) {
-        toast.error(error.response.data.error);
-      } else {
-        toast.error("Failed to save profile.");
-      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to save profile.");
     } finally {
       setLoading(false);
     }

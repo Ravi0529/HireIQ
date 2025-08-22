@@ -59,7 +59,8 @@ export default function NotFound() {
 
             <Alert variant="default" className="bg-blue-50 border-blue-200">
               <AlertDescription className="text-blue-800">
-                The page you're looking for doesn't exist or has been moved.
+                The page you&apos;re looking for doesn&apos;t exist or has been
+                moved.
               </AlertDescription>
             </Alert>
 

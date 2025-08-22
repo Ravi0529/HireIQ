@@ -7,6 +7,7 @@ import {
   CardTitle,
   CardContent,
   CardFooter,
+  CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,17 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Tiptap } from "../Tiptap";
+import {
+  ArrowLeft,
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Code,
+  Laptop,
+  Loader2,
+  X,
+} from "lucide-react";
+import { JobFormValues } from "@/types/job";
 
 const EXPERIENCE_OPTIONS = [
   { label: "Fresher", value: "Fresher" },
@@ -35,7 +47,7 @@ export default function JobForm({
   initialValues,
 }: {
   jobId?: string;
-  initialValues?: any;
+  initialValues?: Partial<JobFormValues>;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -46,28 +58,8 @@ export default function JobForm({
   const [workStatus, setWorkStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [skillInput, setSkillInput] = useState("");
-  const [rephrasing, setRephrasing] = useState(false);
 
   const router = useRouter();
-
-  const rephraseDescription = async () => {
-    if (!description)
-      return toast.error("Please enter a description to rephrase.");
-    setRephrasing(true);
-    try {
-      const res = await axios.post("/api/rephrase", { description });
-      if (res.data?.rephrased) {
-        setDescription(res.data.rephrased);
-        toast.success("Description rephrased by AI!");
-      } else {
-        toast.error("AI did not return a rephrased description.");
-      }
-    } catch (error) {
-      toast.error("Failed to rephrase description with AI.");
-    } finally {
-      setRephrasing(false);
-    }
-  };
 
   useEffect(() => {
     if (initialValues) {
@@ -99,7 +91,7 @@ export default function JobForm({
     }
     try {
       if (jobId) {
-        await axios.put(`/api/jobs/${jobId}`, {
+        await axios.put(`/api/job/${jobId}`, {
           title,
           description,
           location,
@@ -110,7 +102,7 @@ export default function JobForm({
         });
         toast.success("Job updated successfully!");
       } else {
-        await axios.post("/api/jobs", {
+        await axios.post("/api/job/post-new-job", {
           title,
           description,
           location,
@@ -129,9 +121,10 @@ export default function JobForm({
       setRequiredSkills([]);
       setWorkStatus("");
 
-      router.replace("/dashboard");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to save job.");
+      router.replace("/companies");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to save job.");
     } finally {
       setLoading(false);
     }
@@ -152,176 +145,230 @@ export default function JobForm({
   };
 
   return (
-    <div className="max-w-xl w-full mx-auto px-2">
-      <Card className="w-full">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-4">
-          <CardHeader className="pb-2">
-            <CardTitle>Post a New Job</CardTitle>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+      <div className="max-w-5xl w-full">
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+
+        <Card className="w-full border-0 shadow-lg rounded-2xl overflow-hidden">
+          <div className="bg-blue-600 p-1"></div>
+
+          <CardHeader className="text-center space-y-1">
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              {jobId ? "Edit Job Posting" : "Create New Job Posting"}
+            </CardTitle>
+            <CardDescription className="text-gray-500">
+              {jobId
+                ? "Update your job details"
+                : "Post a new job opportunity for candidates"}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="title">
-                Title<span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="e.g. Frontend Developer"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="description">
-                Description<span className="text-red-600">*</span>
-              </Label>
-              <div className="flex gap-2 items-start">
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  disabled={loading || rephrasing}
-                  placeholder="Job description"
-                  rows={6}
-                  className="w-full border rounded-md px-3 py-2 bg-background resize-y min-h-[120px]"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="h-fit mt-1"
-                  onClick={rephraseDescription}
-                  disabled={rephrasing || !description}
-                >
-                  {rephrasing ? "Rephrasing..." : "Rephrase with AI"}
-                </Button>
+
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-6 px-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-gray-700">
+                    <Briefcase className="inline h-4 w-4 mr-1" />
+                    Job Title <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      disabled={loading}
+                      placeholder="e.g. Frontend Developer"
+                      className="pl-9 h-10"
+                    />
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-gray-700">
+                    <MapPin className="inline h-4 w-4 mr-1" />
+                    Location <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      required
+                      disabled={loading}
+                      placeholder="e.g. Bangalore, Remote"
+                      className="pl-9 h-10"
+                    />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="location">
-                Location<span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="e.g. Bangalore, Remote"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="experience">
-                Experience<span className="text-red-600">*</span>
-              </Label>
-              <select
-                id="experience"
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                required
-                disabled={loading}
-                className="w-full border rounded-md px-3 py-2 bg-background"
-              >
-                <option value="" disabled>
-                  Select Experience
-                </option>
-                {EXPERIENCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="salary">
-                Salary<span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="salary"
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
-                disabled={loading}
-                placeholder="e.g. ₹ 15000-20000 /month, ₹ 3-4 LPA, Unpaid"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="requiredSkills">
-                Required Skills<span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="requiredSkills"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={handleAddSkill}
-                disabled={loading}
-                placeholder="Type a skill and press Enter or Comma"
-              />
-              <div className="flex flex-wrap gap-2 mt-2">
-                {requiredSkills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="bg-primary/10 text-primary px-2 py-1 rounded flex items-center gap-1 text-sm"
-                  >
-                    {skill}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSkill(skill)}
-                      className="ml-1 text-red-500 hover:text-red-700"
-                      aria-label={`Remove ${skill}`}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="experience" className="text-gray-700">
+                    Experience <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="relative">
+                    <select
+                      id="experience"
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="w-full border rounded-md px-3 py-2 bg-background pl-9 h-10"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      <option value="" disabled>
+                        Select Experience
+                      </option>
+                      {EXPERIENCE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="workStatus" className="text-gray-700">
+                    <Laptop className="inline h-4 w-4 mr-1" />
+                    Work Status <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="relative">
+                    <select
+                      id="workStatus"
+                      value={workStatus}
+                      onChange={(e) => setWorkStatus(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="w-full border rounded-md px-3 py-2 bg-background pl-9 h-10"
+                    >
+                      <option value="" disabled>
+                        Select Work Status
+                      </option>
+                      {WORK_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <Laptop className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="workStatus">
-                Work Status<span className="text-red-600">*</span>
-              </Label>
-              <select
-                id="workStatus"
-                value={workStatus}
-                onChange={(e) => setWorkStatus(e.target.value)}
-                required
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="salary" className="text-gray-700">
+                    <DollarSign className="inline h-4 w-4 mr-1" />
+                    Salary <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="salary"
+                      value={salary}
+                      onChange={(e) => setSalary(e.target.value)}
+                      disabled={loading}
+                      placeholder="e.g. ₹ 15000-20000 /month, ₹ 3-4 LPA, Unpaid"
+                      className="pl-9 h-10"
+                    />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requiredSkills" className="text-gray-700">
+                    <Code className="inline h-4 w-4 mr-1" />
+                    Required Skills <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="requiredSkills"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={handleAddSkill}
+                      disabled={loading}
+                      placeholder="Type a skill and press Enter or Comma"
+                      className="pl-9 h-10"
+                    />
+                    <Code className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {requiredSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full flex items-center gap-1 text-sm"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="ml-1 text-red-500 hover:text-red-700"
+                          aria-label={`Remove ${skill}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description" className="text-gray-700">
+                    Job Description <span className="text-red-600">*</span>
+                  </Label>
+                </div>
+                <Tiptap
+                  content={description}
+                  onChange={(content) => setDescription(content)}
+                />
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex gap-4 px-6 pb-6 mt-6">
+              <Button
+                type="submit"
+                className="flex-1 h-10 bg-blue-600 hover:bg-blue-700"
                 disabled={loading}
-                className="w-full border rounded-md px-3 py-2 bg-background"
               >
-                <option value="" disabled>
-                  Select Work Status
-                </option>
-                {WORK_STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </CardContent>
-          <CardFooter className="pt-2">
-            <div className="flex gap-2">
-              <Button type="submit" disabled={loading} className="w-full">
-                {jobId
-                  ? loading
-                    ? "Updating..."
-                    : "Update Job"
-                  : loading
-                  ? "Posting..."
-                  : "Post Job"}
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    {jobId ? "Updating..." : "Posting..."}
+                  </>
+                ) : jobId ? (
+                  "Update Job"
+                ) : (
+                  "Post Job"
+                )}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="flex-1"
                 onClick={() => router.back()}
               >
                 Cancel
               </Button>
-            </div>
-          </CardFooter>
-        </form>
-      </Card>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import redis from "@/lib/redis";
 
 const getProfileCacheKey = (userId: string) => `recruiter:profile:${userId}`;
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   const session = await getServerSession(authOptions);
   const user: User = session?.user;
 

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
+import type { ApplicantProfile } from "@/types/applicant";
 
 const STATUS_OPTIONS = [
   { label: "Student", value: "Student" },
@@ -74,8 +75,18 @@ export default function ApplicantProfile() {
   const [education, setEducation] = useState("");
   const [instituteName, setInstituteName] = useState("");
   const [currentCompany, setCurrentCompany] = useState("");
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [experience, setExperience] = useState("");
+  const [currentStatus, setCurrentStatus] = useState<
+    "Student" | "SearchingForJob" | "WorkingProfessional" | ""
+  >("");
+  const [experience, setExperience] = useState<
+    | "Fresher"
+    | "OneToTwoYears"
+    | "TwoToThreeYears"
+    | "ThreeToFiveYears"
+    | "FiveToSevenYears"
+    | "SevenPlusYears"
+    | ""
+  >("");
   const [jobPreferences, setJobPreferences] = useState<string[]>([]);
   const [linkedInProfile, setLinkedInProfile] = useState("");
   const [xProfile, setXProfile] = useState("");
@@ -92,7 +103,7 @@ export default function ApplicantProfile() {
     setLoading(true);
     axios
       .get("/api/applicant-profile")
-      .then((res: AxiosResponse<any>) => {
+      .then((res: AxiosResponse<{ profile: ApplicantProfile }>) => {
         const data = res.data.profile;
         setPhone(data.phone || "");
         setAge(data.age?.toString() || "");
@@ -142,7 +153,7 @@ export default function ApplicantProfile() {
       return;
     }
 
-    const payload = {
+    const payload: ApplicantProfile = {
       phone,
       age: parseInt(age),
       education,
@@ -162,12 +173,9 @@ export default function ApplicantProfile() {
       await axios.post("/api/applicant-profile", payload);
       toast.success("Profile saved successfully.");
       router.replace("/companies");
-    } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.error) {
-        toast.error(error.response.data.error);
-      } else {
-        toast.error("Failed to save profile.");
-      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to save profile.");
     } finally {
       setLoading(false);
     }
@@ -340,7 +348,15 @@ export default function ApplicantProfile() {
                       id="currentStatus"
                       name="currentStatus"
                       value={currentStatus}
-                      onChange={(e) => setCurrentStatus(e.target.value)}
+                      onChange={(e) =>
+                        setCurrentStatus(
+                          e.target.value as
+                            | "Student"
+                            | "SearchingForJob"
+                            | "WorkingProfessional"
+                            | ""
+                        )
+                      }
                       required
                       disabled={loading}
                       className="w-full border rounded-md px-3 py-2 bg-background pl-9 h-10"
@@ -367,7 +383,18 @@ export default function ApplicantProfile() {
                       id="experience"
                       name="experience"
                       value={experience}
-                      onChange={(e) => setExperience(e.target.value)}
+                      onChange={(e) =>
+                        setExperience(
+                          e.target.value as
+                            | "Fresher"
+                            | "OneToTwoYears"
+                            | "TwoToThreeYears"
+                            | "ThreeToFiveYears"
+                            | "FiveToSevenYears"
+                            | "SevenPlusYears"
+                            | ""
+                        )
+                      }
                       required
                       disabled={loading}
                       className="w-full border rounded-md px-3 py-2 bg-background pl-9 h-10"
