@@ -28,7 +28,7 @@ export default function RecruiterCompanies() {
 
           <Button
             onClick={() => router.push("/job/new")}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"
+            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap cursor-pointer"
           >
             <PlusCircle className="h-4 w-4" />
             Post a New Job

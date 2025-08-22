@@ -123,7 +123,7 @@ export default function RecruiterProfile() {
             variant="ghost"
             size="sm"
             onClick={() => router.back()}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back

@@ -3,6 +3,56 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.tiptap {
+  :first-child {
+    margin-top: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.1;
+    margin-top: 1rem;
+    text-wrap: pretty;
+  }
+
+  h1,
+  h2 {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  hr {
+    margin: 1.5rem 0;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .my-custom-image {
+    max-width: 100%;
+    height: auto;
+    width: 600px;
+    resize: both;
+    overflow: auto;
+    display: block;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
