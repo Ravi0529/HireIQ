@@ -20,7 +20,7 @@ import {
   ArrowLeft,
   Briefcase,
   MapPin,
-  DollarSign,
+  IndianRupee,
   Code,
   Laptop,
   Loader2,
@@ -273,7 +273,7 @@ export default function JobForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="salary" className="text-gray-700">
-                    <DollarSign className="inline h-4 w-4 mr-1" />
+                    <IndianRupee className="inline h-4 w-4 mr-1" />
                     Salary <span className="text-red-600">*</span>
                   </Label>
                   <div className="relative">
@@ -285,7 +285,7 @@ export default function JobForm({
                       placeholder="e.g. ₹ 15000-20000 /month, ₹ 3-4 LPA, Unpaid"
                       className="pl-9 h-10"
                     />
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
 

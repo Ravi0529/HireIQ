@@ -1,4 +1,5 @@
 export interface JobFormValues {
+  id: string;
   title: string;
   description: string;
   location: string;
@@ -6,4 +7,15 @@ export interface JobFormValues {
   salary: string;
   requiredSkills: string[];
   workStatus: string;
+  updatedAt: string;
+  createdBy?: {
+    recruiterProfile?: {
+      companyName?: string;
+      companyWebsite?: string;
+      industry?: string;
+    };
+  };
+  _count?: {
+    applications: number;
+  };
 }
