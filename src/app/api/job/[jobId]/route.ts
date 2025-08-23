@@ -92,10 +92,7 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
-    const responseData = JSON.stringify({
-      success: true,
-      singleJobPost,
-    });
+    const responseData = JSON.stringify(singleJobPost);
 
     await redis.set(cacheKey, responseData, "EX", 86400);
     console.log("Stored job in cache");

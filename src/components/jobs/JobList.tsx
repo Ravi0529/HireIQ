@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
-import { JobFormValues } from "@/types/job";
+import { JobFormValues } from "@/types/job-form-values";
 import { useSession } from "next-auth/react";
 import {
   Building2,
@@ -185,7 +185,7 @@ export default function JobList() {
                         <Button
                           onClick={() => router.push(`/job/${job.id}`)}
                           variant="outline"
-                          className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                          className="border-blue-600 text-blue-600 hover:bg-blue-50 cursor-pointer"
                         >
                           View Details
                         </Button>

@@ -26,7 +26,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { JobFormValues } from "@/types/job";
+import { JobFormValues } from "@/types/job-form-values";
 
 const EXPERIENCE_OPTIONS = [
   { label: "Fresher", value: "Fresher" },
