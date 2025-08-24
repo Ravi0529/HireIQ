@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Building2,
   MapPin,
-  DollarSign,
   Briefcase,
   Laptop,
   Calendar,
@@ -21,6 +20,7 @@ import {
   Send,
   Loader2,
   ArrowLeft,
+  IndianRupee,
 } from "lucide-react";
 import type { JobDetailsType } from "@/types/job-details";
 
@@ -85,7 +85,7 @@ export default function JobDetails() {
 
   const handleApply = () => {
     setApplying(true);
-    router.push(`/start/${jobId}`);
+    router.push(`/job/${jobId}/instructions`);
   };
 
   if (loading) {
@@ -228,7 +228,7 @@ export default function JobDetails() {
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-blue-600" />
+                    <IndianRupee className="w-4 h-4 text-blue-600" />
                     <span className="text-gray-700">{job.salary}</span>
                   </div>
 
@@ -272,7 +272,7 @@ export default function JobDetails() {
                     <Button
                       onClick={handleApply}
                       disabled={applying}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer"
                     >
                       {applying ? (
                         <>
@@ -293,7 +293,7 @@ export default function JobDetails() {
                       <Button
                         onClick={() => router.push(`/job/${jobId}/edit`)}
                         variant="outline"
-                        className="w-full"
+                        className="w-full cursor-pointer"
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         Edit Job
@@ -301,7 +301,7 @@ export default function JobDetails() {
                       <Button
                         onClick={handleDelete}
                         variant="destructive"
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         disabled={loading}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -310,7 +310,7 @@ export default function JobDetails() {
                       <Button
                         onClick={() => alert("Analyze feature coming soon!")}
                         variant="secondary"
-                        className="w-full"
+                        className="w-full cursor-pointer"
                       >
                         <BarChart3 className="w-4 h-4 mr-2" />
                         Analyze

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Document from "@tiptap/extension-document";
@@ -70,7 +70,7 @@ interface TiptapProps {
 
 export const Tiptap: React.FC<TiptapProps> = ({
   onChange,
-  content: initialContent,
+  content: initialContent = "",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -180,6 +180,12 @@ export const Tiptap: React.FC<TiptapProps> = ({
       reader.readAsDataURL(file);
     }
   };
+
+  useEffect(() => {
+    if (editor && initialContent !== editor.getHTML()) {
+      editor.commands.setContent(initialContent);
+    }
+  }, [initialContent, editor]);
 
   return (
     <div className="space-y-4 relative">

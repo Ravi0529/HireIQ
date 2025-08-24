@@ -121,7 +121,7 @@ export default function JobForm({
       setRequiredSkills([]);
       setWorkStatus("");
 
-      router.replace("/companies");
+      router.replace(`/job/${jobId}`);
     } catch (error) {
       console.log(error);
       toast.error("Failed to save job.");
@@ -333,10 +333,7 @@ export default function JobForm({
                     Job Description <span className="text-red-600">*</span>
                   </Label>
                 </div>
-                <Tiptap
-                  content={description}
-                  onChange={(content) => setDescription(content)}
-                />
+                <Tiptap content={description} onChange={setDescription} />
               </div>
             </CardContent>
 
