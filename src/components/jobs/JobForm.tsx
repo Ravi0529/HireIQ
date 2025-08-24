@@ -316,7 +316,7 @@ export default function JobForm({
                         <button
                           type="button"
                           onClick={() => handleRemoveSkill(skill)}
-                          className="ml-1 text-red-500 hover:text-red-700"
+                          className="ml-1 text-red-500 hover:text-red-700 cursor-pointer"
                           aria-label={`Remove ${skill}`}
                         >
                           <X className="w-3 h-3" />
@@ -340,7 +340,7 @@ export default function JobForm({
             <CardFooter className="flex gap-4 px-6 pb-6 mt-6">
               <Button
                 type="submit"
-                className="flex-1 h-10 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 h-10 bg-blue-600 hover:bg-blue-700 cursor-pointer"
                 disabled={loading}
               >
                 {loading ? (
@@ -357,7 +357,7 @@ export default function JobForm({
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1"
+                className="flex-1 cursor-pointer"
                 onClick={() => router.back()}
               >
                 Cancel

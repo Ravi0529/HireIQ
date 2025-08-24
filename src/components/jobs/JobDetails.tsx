@@ -23,6 +23,17 @@ import {
   IndianRupee,
 } from "lucide-react";
 import type { JobDetailsType } from "@/types/job-details";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   Fresher: "Fresher",
@@ -49,6 +60,7 @@ export default function JobDetails() {
   const [error, setError] = useState<string | null>(null);
   const [applying, setApplying] = useState<boolean>(false);
   const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -70,8 +82,7 @@ export default function JobDetails() {
 
   const handleDelete = async () => {
     if (!jobId) return;
-    if (!confirm("Are you sure you want to delete this job?")) return;
-    setLoading(true);
+    setDeleteLoading(true);
     try {
       await axios.delete(`/api/job/${jobId}`);
       router.replace("/companies");
@@ -79,7 +90,7 @@ export default function JobDetails() {
       console.log(error);
       setError("Failed to delete job");
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -298,15 +309,46 @@ export default function JobDetails() {
                         <Edit className="w-4 h-4 mr-2" />
                         Edit Job
                       </Button>
-                      <Button
-                        onClick={handleDelete}
-                        variant="destructive"
-                        className="w-full cursor-pointer"
-                        disabled={loading}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {loading ? "Deleting..." : "Delete Job"}
-                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            className="w-full cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Job
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete the job posting and remove all
+                              associated data from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDelete}
+                              disabled={deleteLoading}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              {deleteLoading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete Job"
+                              )}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
                       <Button
                         onClick={() => alert("Analyze feature coming soon!")}
                         variant="secondary"
