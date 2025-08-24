@@ -22,6 +22,7 @@ import {
   Loader2,
   ArrowLeft,
 } from "lucide-react";
+import type { JobDetailsType } from "@/types/job-details";
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   Fresher: "Fresher",
@@ -34,24 +35,27 @@ const EXPERIENCE_LABELS: Record<string, string> = {
 
 export default function JobDetails() {
   const { data: session } = useSession();
-  const user = session?.user;
-  const role = user?.role as "recruiter" | "applicant" | undefined;
+  const user = session?.user as
+    | { id: string; role: "recruiter" | "applicant" }
+    | undefined;
+
+  const role = user?.role;
   const params = useParams();
   const router = useRouter();
   const jobId = params?.jobId as string;
 
-  const [job, setJob] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [job, setJob] = useState<JobDetailsType | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [applying, setApplying] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
+  const [applying, setApplying] = useState<boolean>(false);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
 
   useEffect(() => {
     if (!jobId) return;
     setLoading(true);
     setError(null);
     axios
-      .get(`/api/job/${jobId}`)
+      .get<JobDetailsType>(`/api/job/${jobId}`)
       .then((response) => {
         setJob(response.data);
         if (user && response.data.createdBy?.id === user.id) {
@@ -170,7 +174,7 @@ export default function JobDetails() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {job.requiredSkills.map((skill: string, idx: number) => (
+                      {job.requiredSkills.map((skill, idx) => (
                         <span
                           key={idx}
                           className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium"

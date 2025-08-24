@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
@@ -27,32 +27,37 @@ export default function JobList() {
   const [totalJobs, setTotalJobs] = useState(0);
   const router = useRouter();
 
+  const fetchJobs = useCallback(
+    async (page: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        let response;
+        if (role === "recruiter") {
+          response = await axios.get(
+            `/api/job/get-recruiter-jobs?page=${page}`
+          );
+        } else {
+          response = await axios.get(`/api/job/get-all-job-posts?page=${page}`);
+        }
+
+        setJobs(response.data.jobs);
+        setTotalPages(response.data.pagination.totalPages);
+        setTotalJobs(response.data.pagination.totalJobs);
+      } catch (error) {
+        console.log(error);
+        setError("Failed to fetch jobs");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [role]
+  );
+
   useEffect(() => {
     if (!role) return;
     fetchJobs(currentPage);
-  }, [role, currentPage]);
-
-  const fetchJobs = async (page: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      let response;
-      if (role === "recruiter") {
-        response = await axios.get(`/api/job/get-recruiter-jobs?page=${page}`);
-      } else {
-        response = await axios.get(`/api/job/get-all-job-posts?page=${page}`);
-      }
-
-      setJobs(response.data.jobs);
-      setTotalPages(response.data.pagination.totalPages);
-      setTotalJobs(response.data.pagination.totalJobs);
-    } catch (error) {
-      console.log(error);
-      setError("Failed to fetch jobs");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [role, currentPage, fetchJobs]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
