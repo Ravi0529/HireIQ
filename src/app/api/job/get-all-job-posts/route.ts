@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, User } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
 
 const ITEMS_PER_PAGE = 10;
-
-const getJobsCacheKey = (page: number) => `jobs:page:${page}`;
 
 export const GET = async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
@@ -27,20 +24,6 @@ export const GET = async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
-
-    const cacheKey = getJobsCacheKey(page);
-    const cachedJobs = await redis.get(cacheKey);
-
-    if (cachedJobs) {
-      console.log(`Serving jobs page ${page} from cache`);
-      return new NextResponse(cachedJobs, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Cache": "HIT",
-        },
-      });
-    }
 
     const totalJobs = await prisma.job.count();
 
@@ -86,15 +69,9 @@ export const GET = async (req: NextRequest) => {
       },
     });
 
-    await redis.set(cacheKey, responseData, "EX", 604800);
-    console.log(`Stored jobs page ${page} in cache for 7 days`);
-
     return new NextResponse(responseData, {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Cache": "MISS",
-      },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error getting jobs:", error);
