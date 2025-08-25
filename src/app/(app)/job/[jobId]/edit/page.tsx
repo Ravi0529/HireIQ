@@ -20,6 +20,14 @@ export default function EditJobPage() {
     Partial<JobFormValues> | undefined
   >(undefined);
 
+  useEffect(() => {
+    if (!jobId) return;
+    axios
+      .get(`/api/job/${jobId}`)
+      .then((response) => setInitialValues(response.data))
+      .catch(() => router.replace("/companies"));
+  }, [jobId, router]);
+
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
@@ -59,20 +67,13 @@ export default function EditJobPage() {
     );
   }
 
-  useEffect(() => {
-    if (!jobId) return;
-    axios
-      .get(`/api/job/${jobId}`)
-      .then((response) => setInitialValues(response.data))
-      .catch(() => router.replace("/companies"));
-  }, [jobId, router]);
-
   if (role === "recruiter") {
     return <JobForm key={jobId} jobId={jobId} initialValues={initialValues} />;
   }
 
   if (role === "applicant") {
     router.push("/companies");
+    return null;
   }
 
   return (
