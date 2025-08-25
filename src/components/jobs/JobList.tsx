@@ -16,15 +16,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-// const EXPERIENCE_OPTIONS = [
-//   { label: "Fresher", value: "Fresher" },
-//   { label: "1-2 Years", value: "OneToTwoYears" },
-//   { label: "2-3 Years", value: "TwoToThreeYears" },
-//   { label: "3-5 Years", value: "ThreeToFiveYears" },
-//   { label: "5-7 Years", value: "FiveToSevenYears" },
-//   { label: "7+ Years", value: "SevenPlusYears" },
-// ];
-
 const EXPERIENCE_LABELS: Record<string, string> = {
   Fresher: "Fresher",
   OneToTwoYears: "1-2 Years",
@@ -94,11 +85,6 @@ export default function JobList() {
       }
     }
   }, [jobs, role, session?.user?.id]);
-
-  // const getExperienceLabel = (value: string) => {
-  //   const option = EXPERIENCE_OPTIONS.find((opt) => opt.value === value);
-  //   return option ? option.label : value;
-  // };
 
   if (!role) {
     return (
