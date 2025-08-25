@@ -3,15 +3,26 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import axios from "axios";
+import { toast } from "sonner";
+import {
+  Mic,
+  Video,
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  ChevronRight,
+  FileText,
+  Volume2,
+  Camera,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import axios from "axios";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -170,7 +181,8 @@ export default function InstructionsPage() {
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+        <span>Loading...</span>
       </div>
     );
   }
@@ -178,12 +190,13 @@ export default function InstructionsPage() {
   return (
     <>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent showCloseButton={false} className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-primary">
+            <DialogTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
               Interview Instructions
             </DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-gray-600 mt-2">
               Please read the following instructions carefully before starting
               your AI-powered interview.
             </DialogDescription>
@@ -208,21 +221,31 @@ export default function InstructionsPage() {
           </DialogHeader>
           <DialogFooter>
             <Button
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2 cursor-pointer"
               onClick={handleDialogStartInterview}
               disabled={loading}
             >
-              {loading ? "Preparing Interview..." : "Start Interview Now"}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Preparing Interview...
+                </>
+              ) : (
+                <>
+                  Start Interview Now
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {!dialogOpen && (
-        <div className="max-w-5xl mx-auto p-6 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-          <Card className="w-full shadow-lg border-0">
-            <CardHeader className="text-center space-y-2 pb-4">
-              <CardTitle className="text-2xl font-bold text-gray-800">
+        <div className="max-w-2xl mx-auto p-6 min-h-screen flex items-center justify-center">
+          <Card className="w-full border-gray-200 shadow-sm">
+            <CardHeader className="text-center space-y-2 pb-6">
+              <CardTitle className="text-2xl font-semibold text-gray-800">
                 Prepare for Your AI Interview
               </CardTitle>
               <p className="text-gray-500 text-sm">
@@ -231,37 +254,66 @@ export default function InstructionsPage() {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <div className="space-y-3">
+              <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base">Microphone Check</Label>
+                  <Label className="text-base font-medium text-gray-700 flex items-center gap-2">
+                    <Mic className="w-5 h-5 text-blue-600" />
+                    Microphone Check
+                  </Label>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
+                    className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
                       micChecked
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {micChecked ? "Ready" : "Not checked"}
+                    {micChecked ? (
+                      <>
+                        <CheckCircle className="w-3 h-3" />
+                        Ready
+                      </>
+                    ) : (
+                      "Not checked"
+                    )}
                   </span>
                 </div>
                 <Button
                   variant={micChecked ? "outline" : "default"}
                   onClick={handleMicCheck}
                   disabled={micChecked || micChecking}
-                  className="w-full"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                 >
-                  {micChecked
-                    ? "Microphone Ready"
-                    : micChecking
-                    ? "Testing..."
-                    : "Check Microphone"}
+                  {micChecked ? (
+                    "Microphone Ready"
+                  ) : micChecking ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Testing...
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4 mr-2" />
+                      Check Microphone
+                    </>
+                  )}
                 </Button>
-                {micError && <p className="text-red-600 text-sm">{micError}</p>}
+                {micError && (
+                  <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-2 rounded-md">
+                    <AlertCircle className="w-4 h-4" />
+                    {micError}
+                  </div>
+                )}
                 {micChecking && (
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      Voice Level - Speak into your microphone
-                    </p>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                        <Volume2 className="w-4 h-4" />
+                        Voice Level
+                      </p>
+                      <span className="text-xs text-gray-500">
+                        Speak into your microphone
+                      </span>
+                    </div>
                     <Progress
                       value={Math.min(100, (audioLevel / 256) * 100)}
                       className="h-2"
@@ -270,28 +322,50 @@ export default function InstructionsPage() {
                 )}
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base">Camera Check</Label>
+                  <Label className="text-base font-medium text-gray-700 flex items-center gap-2">
+                    <Camera className="w-5 h-5 text-blue-600" />
+                    Camera Check
+                  </Label>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
+                    className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
                       camChecked
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {camChecked ? "Ready" : "Not checked"}
+                    {camChecked ? (
+                      <>
+                        <CheckCircle className="w-3 h-3" />
+                        Ready
+                      </>
+                    ) : (
+                      "Not checked"
+                    )}
                   </span>
                 </div>
                 <Button
                   variant={camChecked ? "outline" : "default"}
                   onClick={handleCamCheck}
                   disabled={camChecked}
-                  className="w-full"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                 >
-                  {camChecked ? "Camera Ready" : "Check Camera"}
+                  {camChecked ? (
+                    "Camera Ready"
+                  ) : (
+                    <>
+                      <Video className="w-4 h-4 mr-2" />
+                      Check Camera
+                    </>
+                  )}
                 </Button>
-                {camError && <p className="text-red-600 text-sm">{camError}</p>}
+                {camError && (
+                  <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-2 rounded-md">
+                    <AlertCircle className="w-4 h-4" />
+                    {camError}
+                  </div>
+                )}
                 {videoStream && (
                   <div className="mt-2">
                     <AspectRatio ratio={16 / 9}>
@@ -299,15 +373,19 @@ export default function InstructionsPage() {
                         ref={videoRef}
                         autoPlay
                         muted
-                        className="rounded-lg border w-full h-full object-cover shadow-sm"
+                        className="rounded-lg border border-gray-200 w-full h-full object-cover"
                       />
                     </AspectRatio>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="resume" className="text-base">
+              <div className="space-y-3 p-4 border border-gray-200 rounded-lg">
+                <Label
+                  htmlFor="resume"
+                  className="text-base font-medium text-gray-700 flex items-center gap-2"
+                >
+                  <Upload className="w-5 h-5 text-blue-600" />
                   Upload Your Resume (PDF)
                 </Label>
                 <div className="flex items-center space-x-2">
@@ -320,30 +398,29 @@ export default function InstructionsPage() {
                   />
                 </div>
                 {resume && (
-                  <p className="text-green-700 text-sm flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                  <div className="flex items-center gap-2 text-green-700 text-sm bg-green-50 p-2 rounded-md">
+                    <CheckCircle className="w-4 h-4" />
                     Selected: {resume.name}
-                  </p>
+                  </div>
                 )}
               </div>
 
               <Button
-                className="w-full bg-primary hover:bg-primary/90 py-3 text-base"
+                className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-base flex items-center justify-center gap-2 cursor-pointer"
                 disabled={!micChecked || !camChecked || !resume || loading}
                 onClick={handleStartInterview}
               >
-                {loading ? "Processing..." : "Begin Interview Preparation"}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Begin Interview
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
