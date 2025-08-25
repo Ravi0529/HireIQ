@@ -16,6 +16,24 @@ import {
   Loader2,
 } from "lucide-react";
 
+// const EXPERIENCE_OPTIONS = [
+//   { label: "Fresher", value: "Fresher" },
+//   { label: "1-2 Years", value: "OneToTwoYears" },
+//   { label: "2-3 Years", value: "TwoToThreeYears" },
+//   { label: "3-5 Years", value: "ThreeToFiveYears" },
+//   { label: "5-7 Years", value: "FiveToSevenYears" },
+//   { label: "7+ Years", value: "SevenPlusYears" },
+// ];
+
+const EXPERIENCE_LABELS: Record<string, string> = {
+  Fresher: "Fresher",
+  OneToTwoYears: "1-2 Years",
+  TwoToThreeYears: "2-3 Years",
+  ThreeToFiveYears: "3-5 Years",
+  FiveToSevenYears: "5-7 Years",
+  SevenPlusYears: "7+ Years",
+};
+
 export default function JobList() {
   const { data: session } = useSession();
   const role = session?.user?.role as "recruiter" | "applicant" | undefined;
@@ -76,6 +94,11 @@ export default function JobList() {
       }
     }
   }, [jobs, role, session?.user?.id]);
+
+  // const getExperienceLabel = (value: string) => {
+  //   const option = EXPERIENCE_OPTIONS.find((opt) => opt.value === value);
+  //   return option ? option.label : value;
+  // };
 
   if (!role) {
     return (
@@ -186,7 +209,10 @@ export default function JobList() {
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <Briefcase className="w-4 h-4 mr-1 text-blue-600" />
-                          <span>{job.experience}</span>
+                          <span>
+                            {EXPERIENCE_LABELS[job.experience] ||
+                              job.experience}
+                          </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <Laptop className="w-4 h-4 mr-1 text-blue-600" />
