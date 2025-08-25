@@ -25,22 +25,7 @@ export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
 
-    const totalJobs = await prisma.job.count({
-      where: {
-        createdById: user.id,
-      },
-    });
-
-    const recruiter = await prisma.user.findUnique({
-      where: {
-        id: user.id,
-      },
-      select: {
-        role: true,
-      },
-    });
-
-    if (recruiter?.role !== "recruiter") {
+    if (user?.role !== "recruiter") {
       return NextResponse.json(
         {
           success: false,
@@ -51,6 +36,12 @@ export const GET = async (req: NextRequest) => {
         }
       );
     }
+
+    const totalJobs = await prisma.job.count({
+      where: {
+        createdById: user.id,
+      },
+    });
 
     const jobs = await prisma.job.findMany({
       where: {

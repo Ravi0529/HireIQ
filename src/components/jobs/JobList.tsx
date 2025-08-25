@@ -65,6 +65,18 @@ export default function JobList() {
     }
   };
 
+  useEffect(() => {
+    if (role === "recruiter" && jobs.length > 0) {
+      const userJobs = jobs.filter(
+        (job) => job.createdBy?.id === session?.user?.id
+      );
+      if (userJobs.length !== jobs.length) {
+        console.warn("Some jobs don't belong to the current user");
+        setJobs(userJobs);
+      }
+    }
+  }, [jobs, role, session?.user?.id]);
+
   if (!role) {
     return (
       <div className="flex items-center justify-center p-8">

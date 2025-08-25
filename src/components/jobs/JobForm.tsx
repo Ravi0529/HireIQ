@@ -121,7 +121,11 @@ export default function JobForm({
       setRequiredSkills([]);
       setWorkStatus("");
 
-      router.replace(`/job/${jobId}`);
+      if (jobId) {
+        router.replace(`/job/${jobId}`);
+      } else {
+        router.replace("/companies");
+      }
     } catch (error) {
       console.log(error);
       toast.error("Failed to save job.");

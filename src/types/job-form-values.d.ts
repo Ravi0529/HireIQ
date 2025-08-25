@@ -9,6 +9,7 @@ export interface JobFormValues {
   workStatus: string;
   updatedAt: string;
   createdBy?: {
+    id?: string;
     recruiterProfile?: {
       companyName?: string;
       companyWebsite?: string;
