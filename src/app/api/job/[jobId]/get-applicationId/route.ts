@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import redis from "@/lib/redis";
 
 export const GET = async (
   req: NextRequest,
@@ -24,6 +25,17 @@ export const GET = async (
       );
     }
 
+    const cacheKey = `application:${userId}:${jobId}`;
+    const cachedApplication = await redis.get(cacheKey);
+
+    if (cachedApplication) {
+      const applicationData = JSON.parse(cachedApplication);
+      return NextResponse.json({
+        applicationId: applicationData.id,
+        cached: true,
+      });
+    }
+
     const application = await prisma.application.findFirst({
       where: {
         jobId,
@@ -43,8 +55,11 @@ export const GET = async (
       );
     }
 
+    await redis.set(cacheKey, JSON.stringify(application), "EX", 86400);
+
     return NextResponse.json({
       applicationId: application.id,
+      cached: false,
     });
   } catch (error) {
     console.error("Error fetching application:", error);
