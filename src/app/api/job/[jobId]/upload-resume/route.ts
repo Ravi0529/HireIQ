@@ -5,13 +5,14 @@ import OpenAI from "openai";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
-export const POST = async (req: NextRequest) => {
+export const POST = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> }
+) => {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
-  const url = new URL(req.url);
-  const pathSegments = url.pathname.split("/");
-  const jobId = pathSegments[pathSegments.indexOf("job") + 1];
+  const { jobId } = await params;
 
   if (!userId) {
     return NextResponse.json(

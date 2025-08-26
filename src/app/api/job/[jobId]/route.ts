@@ -17,13 +17,14 @@ const invalidateJobCache = async (jobId: string) => {
   }
 };
 
-export const GET = async (req: NextRequest) => {
+export const GET = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> }
+) => {
   const session = await getServerSession(authOptions);
   const user: User = session?.user;
 
-  const url = new URL(req.url);
-  const pathSegments = url.pathname.split("/");
-  const jobId = pathSegments[pathSegments.indexOf("job") + 1];
+  const { jobId } = await params;
 
   if (!session || !session.user || !user.email) {
     return NextResponse.json(
@@ -119,13 +120,14 @@ export const GET = async (req: NextRequest) => {
   }
 };
 
-export const PUT = async (req: NextRequest) => {
+export const PUT = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> }
+) => {
   const session = await getServerSession(authOptions);
   const user: User = session?.user;
 
-  const url = new URL(req.url);
-  const pathSegments = url.pathname.split("/");
-  const jobId = pathSegments[pathSegments.indexOf("job") + 1];
+  const { jobId } = await params;
 
   if (!session || !session.user || !user.email) {
     return NextResponse.json(
@@ -232,13 +234,14 @@ export const PUT = async (req: NextRequest) => {
   }
 };
 
-export const DELETE = async (req: NextRequest) => {
+export const DELETE = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> }
+) => {
   const session = await getServerSession(authOptions);
   const user: User = session?.user;
 
-  const url = new URL(req.url);
-  const pathSegments = url.pathname.split("/");
-  const jobId = pathSegments[pathSegments.indexOf("job") + 1];
+  const { jobId } = await params;
 
   if (!session || !session.user || !user.email) {
     return NextResponse.json(
