@@ -77,7 +77,7 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="w-full h-11 border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2"
+            className="w-full h-11 border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
             onClick={() => handleOAuthSignIn("google")}
             disabled={loading}
           >

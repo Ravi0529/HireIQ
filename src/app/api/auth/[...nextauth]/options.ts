@@ -101,7 +101,11 @@ export const authOptions: NextAuthOptions = {
         const firstName = nameParts[0] || "FirstName";
         const lastName = nameParts.slice(1).join(" ") || "LastName";
 
-        if (!existingUser.firstName || !existingUser.lastName) {
+        if (
+          !existingUser.firstName ||
+          !existingUser.lastName ||
+          !existingUser.image
+        ) {
           await prisma.user.update({
             where: { id: existingUser.id },
             data: { firstName, lastName, image: user.image },
@@ -110,8 +114,21 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
-      if (user) {
+    async jwt({ token, user, account }) {
+      if (account?.provider === "google" && user?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+          token.firstName = dbUser.firstName;
+          token.lastName = dbUser.lastName;
+          token.email = dbUser.email;
+          token.image = dbUser.image || user.image;
+        }
+      } else if (user) {
         token.id = user.id;
         token.role = user.role;
         token.firstName = user.firstName;
