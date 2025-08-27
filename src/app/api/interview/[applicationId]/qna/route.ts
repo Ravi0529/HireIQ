@@ -1,14 +1,8 @@
 // model: "gemini-2.5-flash-preview-tts" (for tts)
-export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-});
 
 const generateFirstQuestion = async ({
   resumeSummary,
@@ -17,47 +11,60 @@ const generateFirstQuestion = async ({
   resumeSummary: string;
   jobDescription: string;
 }) => {
-  const prompt = `
-    You are an experienced AI interviewer conducting a professional job interview. The interview will last for 5 minutes only. Your task is to start the interview with an appropriate first question based on the applicant's resume and the job description.
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    });
 
-    -- TRY TO MAKE THE QUESTION SHORT, DONT ELABORATE MUCH IF NOT REQUIRED
+    const prompt = `
+      You are an experienced AI interviewer conducting a professional job interview. The interview will last for 5 minutes only. Your task is to start the interview with an appropriate first question based on the applicant's resume and the job description.
 
-    Interview Structure (5 minutes):
-    1. Start with a warm, personal introduction question (e.g., "Can you tell me a bit about yourself?")
-    2. Move to professional background questions
-    3. Then technical/skill-specific questions
-    4. Finally, situational/behavioral questions
-    5. End with a closing question when time is up (e.g., "Thank you for your time. Do you have any questions for us before we conclude?")
+      -- TRY TO MAKE THE QUESTION SHORT, DONT ELABORATE MUCH IF NOT REQUIRED
 
-    Guidelines:
-    - The interview is strictly 5 minutes. Begin and end accordingly.
-    - Start with a friendly tone to make the candidate comfortable
-    - Make the question open-ended to encourage detailed responses
-    - Keep it professional but conversational
-    - Reference specific details from their resume when appropriate
-    - Align with the job requirements from the description
+      Interview Structure (5 minutes):
+      1. Start with a warm, personal introduction question (e.g., "Can you tell me a bit about yourself?")
+      2. Move to professional background questions
+      3. Then technical/skill-specific questions
+      4. Finally, situational/behavioral questions
+      5. End with a closing question when time is up (e.g., "Thank you for your time. Do you have any questions for us before we conclude?")
 
-    Applicant's Resume Summary:
-    ${resumeSummary}
+      Guidelines:
+      - The interview is strictly 5 minutes. Begin and end accordingly.
+      - Start with a friendly tone to make the candidate comfortable
+      - Make the question open-ended to encourage detailed responses
+      - Keep it professional but conversational
+      - Reference specific details from their resume when appropriate
+      - Align with the job requirements from the description
 
-    Job Description:
-    ${jobDescription}
+      Applicant's Resume Summary:
+      ${resumeSummary}
 
-    Craft a natural, engaging first question that would start the interview conversation effectively.
-  `;
+      Job Description:
+      ${jobDescription}
 
-  const response = await openai.chat.completions.create({
-    model: "gemini-2.0-flash",
-    messages: [
-      { role: "system", content: prompt },
-      {
-        role: "user",
-        content: "Please provide the first question to start the interview.",
-      },
-    ],
-  });
+      Craft a natural, engaging first question that would start the interview conversation effectively.
+    `;
 
-  return response.choices[0].message.content?.trim();
+    const response = await openai.chat.completions.create({
+      model: "gemini-2.0-flash",
+      messages: [
+        { role: "system", content: prompt },
+        {
+          role: "user",
+          content: "Please provide the first question to start the interview.",
+        },
+      ],
+    });
+
+    return (
+      response.choices[0]?.message?.content?.trim() ||
+      "Can you tell me a bit about yourself and your background?"
+    );
+  } catch (error) {
+    console.error("Error generating first question:", error);
+    return "Can you tell me a bit about yourself and your background?";
+  }
 };
 
 const generateNextQuestion = async ({
@@ -69,56 +76,69 @@ const generateNextQuestion = async ({
   jobDescription: string;
   conversationHistory: string;
 }) => {
-  const prompt = `
-    You are an experienced AI interviewer conducting a professional job interview. The interview will last for 5 minutes only. Based on the conversation so far, the applicant's resume, and the job requirements, generate the next appropriate question.
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    });
 
-    -- TRY TO MAKE THE QUESTION SHORT, DONT ELABORATE MUCH IF NOT REQUIRED
+    const prompt = `
+      You are an experienced AI interviewer conducting a professional job interview. The interview will last for 5 minutes only. Based on the conversation so far, the applicant's resume, and the job requirements, generate the next appropriate question.
 
-    Interview Flow Guidelines (5 minutes):
-    1. Start with personal/professional background questions
-    2. Progress to technical/skill-specific questions
-    3. Include situational/behavioral questions
-    4. Conclude with culture fit and candidate questions
-    5. End with an appropriate closing when time is up (e.g., "Thank you for your time. Do you have any questions for us before we conclude?")
+      -- TRY TO MAKE THE QUESTION SHORT, DONT ELABORATE MUCH IF NOT REQUIRED
 
-    Current Context:
-    - Resume Summary: ${resumeSummary}
-    - Job Description: ${jobDescription}
-    - Conversation History: ${conversationHistory}
+      Interview Flow Guidelines (5 minutes):
+      1. Start with personal/professional background questions
+      2. Progress to technical/skill-specific questions
+      3. Include situational/behavioral questions
+      4. Conclude with culture fit and candidate questions
+      5. End with an appropriate closing when time is up (e.g., "Thank you for your time. Do you have any questions for us before we conclude?")
 
-    Rules for Next Question:
-    - The interview is strictly 5 minutes. If time is up, end the interview with a closing statement.
-    - Analyze what has already been asked and what needs to be covered next
-    - Progress naturally through the interview stages
-    - Ask only one clear, focused question at a time
-    - Make questions open-ended when appropriate
-    - Reference previous answers when relevant to show active listening
-    - Maintain professional but conversational tone
-    - Ensure questions are relevant to both the candidate's background and job requirements
-    - When appropriate, transition to more challenging questions
-    - When all key areas are covered, begin wrapping up the interview
+      Current Context:
+      - Resume Summary: ${resumeSummary}
+      - Job Description: ${jobDescription}
+      - Conversation History: ${conversationHistory}
 
-    Generate the single most appropriate next question at this point in the interview.
-  `;
+      Rules for Next Question:
+      - The interview is strictly 5 minutes. If time is up, end the interview with a closing statement.
+      - Analyze what has already been asked and what needs to be covered next
+      - Progress naturally through the interview stages
+      - Ask only one clear, focused question at a time
+      - Make questions open-ended when appropriate
+      - Reference previous answers when relevant to show active listening
+      - Maintain professional but conversational tone
+      - Ensure questions are relevant to both the candidate's background and job requirements
+      - When appropriate, transition to more challenging questions
+      - When all key areas are covered, begin wrapping up the interview
 
-  const response = await openai.chat.completions.create({
-    model: "gemini-2.0-flash",
-    messages: [
-      { role: "system", content: prompt },
-      { role: "user", content: "Please provide the next question." },
-    ],
-  });
+      Generate the single most appropriate next question at this point in the interview.
+    `;
 
-  return response.choices[0].message.content?.trim();
+    const response = await openai.chat.completions.create({
+      model: "gemini-2.0-flash",
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: "Please provide the next question." },
+      ],
+    });
+
+    return (
+      response.choices[0]?.message?.content?.trim() ||
+      "Could you tell me about a challenging project you've worked on?"
+    );
+  } catch (error) {
+    console.error("Error generating next question:", error);
+    return "Could you tell me about a challenging project you've worked on?";
+  }
 };
 
-export const GET = async (
+export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ applicationId: string }> }
-) => {
-  const { applicationId } = await params;
-
+) {
   try {
+    const { applicationId } = await params;
+
     let interviewInfo = await prisma.interviewInfo.findFirst({
       where: {
         applicationId,
@@ -153,8 +173,12 @@ export const GET = async (
     // If no startTime, set it now
     if (!interviewInfo.startTime) {
       await prisma.interviewInfo.update({
-        where: { id: interviewInfo.id },
-        data: { startTime: new Date() },
+        where: {
+          id: interviewInfo.id,
+        },
+        data: {
+          startTime: new Date(),
+        },
       });
       interviewInfo = await prisma.interviewInfo.findFirst({
         where: {
@@ -174,7 +198,20 @@ export const GET = async (
         },
       });
     }
-    const startTime = new Date(interviewInfo!.startTime!);
+
+    if (!interviewInfo) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Interview session not found after update",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    const startTime = new Date(interviewInfo.startTime!);
     const now = new Date();
     const elapsed = (now.getTime() - startTime.getTime()) / 1000; // seconds
     const interviewOver = elapsed >= 300;
@@ -185,14 +222,14 @@ export const GET = async (
         interviewOver: true,
         timeLeft: 0,
         currentQuestion: null,
-        qnas: interviewInfo!.qnas,
+        qnas: interviewInfo.qnas,
       });
     }
 
-    if (interviewInfo!.qnas.length === 0) {
+    if (interviewInfo.qnas.length === 0) {
       const firstQuestion = await generateFirstQuestion({
-        resumeSummary: interviewInfo!.resumeSummary,
-        jobDescription: interviewInfo!.application.job.description,
+        resumeSummary: interviewInfo.resumeSummary,
+        jobDescription: interviewInfo.application.job.description,
       });
 
       if (!firstQuestion) {
@@ -209,12 +246,13 @@ export const GET = async (
 
       await prisma.qnA.create({
         data: {
-          interviewInfoId: interviewInfo!.id,
+          interviewInfoId: interviewInfo.id,
           question: firstQuestion,
           answer: "",
         },
       });
 
+      // Refetch the updated interview info
       interviewInfo = await prisma.interviewInfo.findFirst({
         where: {
           applicationId,
@@ -234,11 +272,23 @@ export const GET = async (
       });
     }
 
+    if (!interviewInfo) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Interview session not found after question creation",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
     const currentQuestion =
-      interviewInfo?.qnas.find((qna) => !qna.answer)?.question ?? null;
+      interviewInfo.qnas.find((qna) => !qna.answer)?.question ?? null;
 
     return NextResponse.json({
-      qnas: interviewInfo?.qnas,
+      qnas: interviewInfo.qnas,
       currentQuestion: currentQuestion,
       interviewOver: false,
       timeLeft: Math.max(0, 300 - Math.floor(elapsed)),
@@ -255,15 +305,14 @@ export const GET = async (
       }
     );
   }
-};
+}
 
-export const POST = async (
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ applicationId: string }> }
-) => {
-  const { applicationId } = await params;
-
+) {
   try {
+    const { applicationId } = await params;
     const { answer } = await req.json();
 
     if (!answer) {
@@ -273,7 +322,7 @@ export const POST = async (
           error: "Answer is required",
         },
         {
-          status: 404,
+          status: 400,
         }
       );
     }
@@ -310,8 +359,12 @@ export const POST = async (
     // --- 5 MINUTE TIMER ENFORCEMENT ---
     if (!interviewInfo.startTime) {
       await prisma.interviewInfo.update({
-        where: { id: interviewInfo.id },
-        data: { startTime: new Date() },
+        where: {
+          id: interviewInfo.id,
+        },
+        data: {
+          startTime: new Date(),
+        },
       });
       interviewInfo = await prisma.interviewInfo.findFirst({
         where: {
@@ -331,7 +384,20 @@ export const POST = async (
         },
       });
     }
-    const startTime = new Date(interviewInfo!.startTime!);
+
+    if (!interviewInfo) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Interview session not found after update",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    const startTime = new Date(interviewInfo.startTime!);
     const now = new Date();
     const elapsed = (now.getTime() - startTime.getTime()) / 1000; // seconds
     const interviewOver = elapsed >= 300;
@@ -345,13 +411,13 @@ export const POST = async (
     }
     // --- END TIMER ENFORCEMENT ---
 
-    const interviewInfoId = interviewInfo!.id;
-    const lastQnA = interviewInfo!.qnas[interviewInfo!.qnas.length - 1];
+    const interviewInfoId = interviewInfo.id;
+    const lastQnA = interviewInfo.qnas[interviewInfo.qnas.length - 1];
 
-    if (interviewInfo!.qnas.length === 0) {
+    if (interviewInfo.qnas.length === 0) {
       const firstQuestion = await generateFirstQuestion({
-        resumeSummary: interviewInfo!.resumeSummary,
-        jobDescription: interviewInfo!.application.job.description,
+        resumeSummary: interviewInfo.resumeSummary,
+        jobDescription: interviewInfo.application.job.description,
       });
 
       if (!firstQuestion) {
@@ -414,12 +480,12 @@ export const POST = async (
     });
 
     const conversationHistory = updatedQnAs
-      .map((qna) => `Q. ${qna.question}\nA. ${qna.answer} || "(pending)"`)
+      .map((qna) => `Q. ${qna.question}\nA. ${qna.answer || "(pending)"}`)
       .join("\n");
 
     const nextQuestion = await generateNextQuestion({
-      resumeSummary: interviewInfo!.resumeSummary,
-      jobDescription: interviewInfo!.application.job.description,
+      resumeSummary: interviewInfo.resumeSummary,
+      jobDescription: interviewInfo.application.job.description,
       conversationHistory,
     });
 
@@ -462,4 +528,4 @@ export const POST = async (
       }
     );
   }
-};
+}

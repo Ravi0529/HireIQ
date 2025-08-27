@@ -52,6 +52,7 @@
     "prisma": "^6.14.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-speech-recognition": "^4.0.1",
     "sonner": "^2.0.7",
     "sooner": "^1.1.4",
     "tailwind-merge": "^3.3.1"
