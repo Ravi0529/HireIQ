@@ -20,9 +20,11 @@ import {
 export default function QnASection({
   applicationId,
   jobId,
+  forceEnd,
 }: {
   applicationId: string;
   jobId: string;
+  forceEnd?: boolean;
 }) {
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -204,6 +206,16 @@ export default function QnASection({
     resetTranscript();
     startListeningForQuestion();
   };
+
+  useEffect(() => {
+    if (forceEnd) {
+      SpeechRecognition.stopListening();
+      setCountdown(null);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      if (submissionTimeoutRef.current)
+        clearTimeout(submissionTimeoutRef.current);
+    }
+  }, [forceEnd]);
 
   return (
     <Card className="p-4 bg-background rounded-xl shadow-md space-y-4">
