@@ -104,7 +104,7 @@ export default function InterviewPage() {
             No Application Found
           </h2>
           <p className="text-gray-600 mb-6">
-            You haven't applied for this job yet.
+            You haven&apos;t applied for this job yet.
           </p>
           <Button
             onClick={() => router.push(`/job/${jobId}`)}

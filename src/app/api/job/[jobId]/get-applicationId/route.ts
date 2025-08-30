@@ -24,8 +24,6 @@ export const GET = async (
       );
     }
 
-    const cacheKey = `application:${userId}:${jobId}`;
-
     const application = await prisma.application.findFirst({
       where: {
         jobId,
