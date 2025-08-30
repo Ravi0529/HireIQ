@@ -8,8 +8,19 @@ import AIFeed from "@/components/interview/AIFeed";
 import QnASection from "@/components/interview/QnASection";
 import { Card } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
-import { Loader2, Clock, Mic, Video, LogOut } from "lucide-react";
+import { Loader2, Clock, Mic, Video, LogOut, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function InterviewPage() {
   const { status } = useSession();
@@ -43,6 +54,11 @@ export default function InterviewPage() {
 
     fetchApplicationId();
   }, [jobId, status]);
+
+  const confirmEndInterview = () => {
+    setForceEnd(true);
+    router.push(`/feedback/${jobId}`);
+  };
 
   if (status === "loading") {
     return (
@@ -117,11 +133,6 @@ export default function InterviewPage() {
     );
   }
 
-  const handleEndInterview = () => {
-    setForceEnd(true);
-    router.push(`/feedback/${jobId}`);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -140,14 +151,41 @@ export default function InterviewPage() {
             </div>
           </div>
 
-          <Button
-            onClick={handleEndInterview}
-            variant="outline"
-            className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 cursor-pointer"
-          >
-            <LogOut className="h-4 w-4" />
-            End Interview
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                End Interview
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  <AlertDialogTitle>End Interview?</AlertDialogTitle>
+                </div>
+                <AlertDialogDescription className="pt-2">
+                  Are you sure you want to end this interview? Your progress
+                  will be saved, but you won&apos;t be able to continue once
+                  ended.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="cursor-pointer">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmEndInterview}
+                  className="bg-red-600 hover:bg-red-700 cursor-pointer"
+                >
+                  End Interview
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
