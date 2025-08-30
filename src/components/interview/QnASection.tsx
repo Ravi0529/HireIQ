@@ -31,7 +31,7 @@ export default function QnASection({
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const submissionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [timer, setTimer] = useState(300); // 5 minutes in seconds
+  const [timer, setTimer] = useState(300);
   const [interviewOver, setInterviewOver] = useState(false);
   const router = useRouter();
 
@@ -42,7 +42,6 @@ export default function QnASection({
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
-  // Clear all timeouts on unmount
   useEffect(() => {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
@@ -51,7 +50,6 @@ export default function QnASection({
     };
   }, []);
 
-  // Helper to start continuous listening
   const startListeningForQuestion = () => {
     if (!browserSupportsSpeechRecognition) {
       setError("Your browser does not support Speech Recognition.");
@@ -59,12 +57,11 @@ export default function QnASection({
     }
     resetTranscript();
     SpeechRecognition.startListening({
-      continuous: true, // Changed to continuous listening
+      continuous: true,
       language: "en-US",
     });
   };
 
-  // Remove QnA history fetch and filtering logic, only fetch current question
   const fetchCurrentQuestion = async () => {
     try {
       setLoading(true);
@@ -86,17 +83,14 @@ export default function QnASection({
     fetchCurrentQuestion();
   }, [applicationId]);
 
-  // Auto-listen when question appears (but not during processing)
   useEffect(() => {
     if (currentQuestion && !isProcessing && !loading) {
-      // Small delay to ensure UI is updated
       setTimeout(() => {
         startListeningForQuestion();
       }, 500);
     }
   }, [currentQuestion, isProcessing, loading]);
 
-  // Handle speech detection and submission timeout
   useEffect(() => {
     if (submissionTimeoutRef.current) {
       clearTimeout(submissionTimeoutRef.current);
@@ -108,15 +102,12 @@ export default function QnASection({
     }
     setCountdown(null);
 
-    // If we're not listening or there's no current question, do nothing
     if (!listening || !currentQuestion || isProcessing) return;
 
-    // If user is speaking (transcript is changing), reset the timeout
     if (transcript) {
-      // Set a new timeout for 5 seconds after last speech
       submissionTimeoutRef.current = setTimeout(() => {
         startCountdown();
-      }, 5000); // Wait 5 seconds of silence before starting countdown
+      }, 5000);
     }
 
     return () => {
@@ -126,7 +117,6 @@ export default function QnASection({
     };
   }, [transcript, listening, currentQuestion, isProcessing]);
 
-  // Timer effect
   useEffect(() => {
     if (interviewOver) return;
     if (timer <= 0) {
@@ -141,7 +131,7 @@ export default function QnASection({
   }, [timer, interviewOver]);
 
   const startCountdown = () => {
-    setCountdown(5); // Start countdown from 5 seconds
+    setCountdown(5);
 
     countdownRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -159,11 +149,9 @@ export default function QnASection({
     }, 5000);
   };
 
-  // Prevent answering if interview is over
   const handleStopAndSend = async () => {
     if (!transcript.trim() || loading || isProcessing || interviewOver) return;
 
-    // Stop listening while processing
     SpeechRecognition.stopListening();
 
     console.log("Sending answer:", transcript.trim());
@@ -180,12 +168,10 @@ export default function QnASection({
         answer: transcript.trim(),
       });
 
-      //   console.log("Response from backend:", response.data);
+      // console.log("Response from backend:", response.data);
 
       if (response.data.success) {
-        // Reset transcript first
         resetTranscript();
-        // Update the new question
         if (response.data.question) {
           setCurrentQuestion(response.data.question);
           toast.success("Answer submitted successfully!");
@@ -214,7 +200,6 @@ export default function QnASection({
     }
   };
 
-  // Manual retry function
   const retryListening = () => {
     resetTranscript();
     startListeningForQuestion();
@@ -224,7 +209,6 @@ export default function QnASection({
     <Card className="p-4 bg-background rounded-xl shadow-md space-y-4">
       <h3 className="text-lg font-semibold mb-2">Interview Q&A</h3>
 
-      {/* Timer display */}
       <div className="text-right text-sm font-medium text-gray-700">
         Time Left: {Math.floor(timer / 60)}:
         {(timer % 60).toString().padStart(2, "0")}
@@ -242,7 +226,6 @@ export default function QnASection({
         </div>
       )}
 
-      {/* Current Question */}
       {currentQuestion && !interviewOver && (
         <div className="p-3 rounded-md border mt-4 space-y-3">
           <div className="font-bold text-foreground">Current Question:</div>
@@ -256,14 +239,12 @@ export default function QnASection({
             </div>
           </div>
 
-          {/* Countdown display */}
           {countdown !== null && (
             <div className="text-gray-700 text-md font-medium">
               Submitting answer in {countdown} seconds...
             </div>
           )}
 
-          {/* Status indicators */}
           {listening && !countdown && (
             <div className="text-green-600 text-sm flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
@@ -280,7 +261,6 @@ export default function QnASection({
 
           {loading && <div className="text-gray-600 text-sm">Loading...</div>}
 
-          {/* Manual controls */}
           <div className="flex gap-2">
             <button
               onClick={retryListening}
@@ -293,7 +273,6 @@ export default function QnASection({
             {transcript && (
               <button
                 onClick={() => {
-                  // Force submit current transcript
                   if (transcript.trim() && !isProcessing && !interviewOver) {
                     handleStopAndSend();
                   }
@@ -308,7 +287,6 @@ export default function QnASection({
         </div>
       )}
 
-      {/* Interview Over Dialog */}
       <Dialog open={interviewOver}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
@@ -321,9 +299,7 @@ export default function QnASection({
           <DialogFooter>
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              onClick={() =>
-                router.push(`/dashboard/jobs/new/${jobId}/feedback`)
-              }
+              onClick={() => router.push(`/feedback/${jobId}`)}
             >
               Check Feedback
             </button>
@@ -331,17 +307,14 @@ export default function QnASection({
         </DialogContent>
       </Dialog>
 
-      {/* Debug info (remove in production) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="text-xs text-gray-400 mt-4">
-          <div>Listening: {listening ? "Yes" : "No"}</div>
-          <div>Processing: {isProcessing ? "Yes" : "No"}</div>
-          <div>Current Question: {currentQuestion ? "Yes" : "No"}</div>
-          <div>Transcript: {transcript || "None"}</div>
-          <div>Countdown: {countdown !== null ? countdown : "Inactive"}</div>
-          <div>Timer: {timer}</div>
-        </div>
-      )}
+      <div className="text-xs text-gray-400 mt-4">
+        <div>Listening: {listening ? "Yes" : "No"}</div>
+        <div>Processing: {isProcessing ? "Yes" : "No"}</div>
+        <div>Current Question: {currentQuestion ? "Yes" : "No"}</div>
+        <div>Transcript: {transcript || "None"}</div>
+        <div>Countdown: {countdown !== null ? countdown : "Inactive"}</div>
+        <div>Timer: {timer}</div>
+      </div>
     </Card>
   );
 }

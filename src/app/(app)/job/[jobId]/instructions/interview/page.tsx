@@ -29,9 +29,7 @@ export default function InterviewPage() {
 
     const fetchApplicationId = async () => {
       try {
-        const response = await axios.get(
-          `/api/job/${jobId}/get-applicationId`
-        );
+        const response = await axios.get(`/api/job/${jobId}/get-applicationId`);
         setApplicationId(response.data.applicationId);
       } catch (error) {
         console.error(error);
@@ -88,7 +86,7 @@ export default function InterviewPage() {
         <Card className="p-6 max-w-md text-center">
           <h2 className="text-lg font-semibold mb-2">No Application Found</h2>
           <p className="text-muted-foreground mb-4">
-            You haven't applied for this job yet.
+            You haven&apos;t applied for this job yet.
           </p>
           <button
             onClick={() => router.push(`/job/${jobId}`)}

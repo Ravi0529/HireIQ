@@ -23,6 +23,24 @@ export const GET = async () => {
   }
 
   try {
+    const dbUser = await prisma.user.findUnique({
+      where: {
+        id: user.id,
+      },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found in database. Please sign up first.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
     const cacheKey = getProfileCacheKey(user.id);
     const cachedProfile = await redis.get(cacheKey);
 
@@ -111,6 +129,24 @@ export const POST = async (req: NextRequest) => {
   }
 
   try {
+    const dbUser = await prisma.user.findUnique({
+      where: {
+        id: user.id,
+      },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found in database. Please sign up first.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
     const { companyName, companyWebsite, industry, position, linkedInProfile } =
       await req.json();
 

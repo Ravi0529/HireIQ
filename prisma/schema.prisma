@@ -67,9 +67,13 @@ enum JobPreferences {
 
 enum ApplicationStatus {
   Applied
-  Reviewing
   Accepted
   Rejected
+}
+
+enum JobStatus {
+  Open
+  Closed
 }
 
 enum WorkStatus {
@@ -135,6 +139,7 @@ model Job {
   salary         String
   requiredSkills String[]
   workStatus     WorkStatus
+  status         JobStatus     @default(Open)
   createdById    String
   createdBy      User          @relation(fields: [createdById], references: [id])
   applications   Application[]

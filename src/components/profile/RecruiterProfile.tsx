@@ -275,7 +275,7 @@ export default function RecruiterProfile() {
             <CardFooter className="flex flex-col gap-3 px-6 pb-6 mt-4">
               <Button
                 type="submit"
-                className="w-full h-10 bg-blue-600 hover:bg-blue-700"
+                className="w-full h-10 bg-blue-600 hover:bg-blue-700 cursor-pointer"
                 disabled={loading}
               >
                 {loading ? (
