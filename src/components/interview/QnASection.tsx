@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Card } from "../ui/card";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
@@ -16,6 +15,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../ui/dialog";
+import { Button } from "../ui/button";
+import {
+  Mic,
+  Send,
+  RotateCcw,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 
 export default function QnASection({
   applicationId,
@@ -170,8 +178,6 @@ export default function QnASection({
         answer: transcript.trim(),
       });
 
-      // console.log("Response from backend:", response.data);
-
       if (response.data.success) {
         resetTranscript();
         if (response.data.question) {
@@ -218,20 +224,26 @@ export default function QnASection({
   }, [forceEnd]);
 
   return (
-    <Card className="p-4 bg-background rounded-xl shadow-md space-y-4">
-      <h3 className="text-lg font-semibold mb-2">Interview Q&A</h3>
-
-      <div className="text-right text-sm font-medium text-gray-700">
-        Time Left: {Math.floor(timer / 60)}:
-        {(timer % 60).toString().padStart(2, "0")}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-blue-600" />
+          <span className="text-sm font-medium text-blue-700">
+            Time Remaining
+          </span>
+        </div>
+        <div className="text-sm font-bold text-blue-800">
+          {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+        </div>
       </div>
 
       {error && (
-        <div className="text-red-500 p-2 bg-red-50 rounded">
-          {error}
+        <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-sm">{error}</span>
           <button
             onClick={() => setError("")}
-            className="ml-2 text-sm underline"
+            className="ml-auto text-sm underline"
           >
             Dismiss
           </button>
@@ -239,94 +251,97 @@ export default function QnASection({
       )}
 
       {currentQuestion && !interviewOver && (
-        <div className="p-3 rounded-md border mt-4 space-y-3">
-          <div className="font-bold text-foreground">Current Question:</div>
-          <div className="text-muted-foreground">{currentQuestion}</div>
-
-          <div>
-            <label className="block text-sm mb-1">Your Answer:</label>
-            <div className="border rounded p-2 bg-muted min-h-[50px]">
-              {transcript ||
-                (listening ? "[Listening...]" : "[Waiting for speech]")}
-            </div>
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              Current Question
+            </h3>
+            <p className="text-gray-900">{currentQuestion}</p>
           </div>
 
-          {countdown !== null && (
-            <div className="text-gray-700 text-md font-medium">
-              Submitting answer in {countdown} seconds...
+          <div className="p-4 bg-white rounded-lg border border-gray-200">
+            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Mic className="h-4 w-4 text-blue-600" />
+              Your Answer
+            </h3>
+            <div className="min-h-20 p-3 bg-gray-50 rounded border border-gray-200 text-gray-800">
+              {transcript ||
+                (listening ? "Listening..." : "Waiting for your response...")}
             </div>
-          )}
 
-          {listening && !countdown && (
-            <div className="text-green-600 text-sm flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-              Listening for your answer...
+            <div className="mt-3">
+              {countdown !== null && (
+                <div className="flex items-center gap-2 text-amber-600 text-sm">
+                  <Clock className="h-4 w-4" />
+                  Submitting in {countdown} seconds...
+                </div>
+              )}
+
+              {listening && !countdown && (
+                <div className="flex items-center gap-2 text-green-600 text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Listening for your answer...
+                </div>
+              )}
+
+              {isProcessing && (
+                <div className="flex items-center gap-2 text-blue-600 text-sm">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  Processing your answer...
+                </div>
+              )}
             </div>
-          )}
 
-          {isProcessing && (
-            <div className="text-blue-600 text-sm flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
-              Processing your answer...
-            </div>
-          )}
-
-          {loading && <div className="text-gray-600 text-sm">Loading...</div>}
-
-          <div className="flex gap-2">
-            <button
-              onClick={retryListening}
-              disabled={listening || isProcessing || loading}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-            >
-              {listening ? "Listening..." : "Re-start Listening"}
-            </button>
-
-            {transcript && (
-              <button
-                onClick={() => {
-                  if (transcript.trim() && !isProcessing && !interviewOver) {
-                    handleStopAndSend();
-                  }
-                }}
-                disabled={isProcessing || loading}
-                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+            <div className="flex gap-2 mt-4">
+              <Button
+                onClick={retryListening}
+                disabled={listening || isProcessing || loading}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
               >
-                Submit Now
-              </button>
-            )}
+                <RotateCcw className="h-4 w-4" />
+                {listening ? "Listening..." : "Restart Listening"}
+              </Button>
+
+              {transcript && (
+                <Button
+                  onClick={handleStopAndSend}
+                  disabled={isProcessing || loading}
+                  size="sm"
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="h-4 w-4" />
+                  Submit Answer
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       <Dialog open={interviewOver}>
-        <DialogContent showCloseButton={false}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Interview Complete</DialogTitle>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <DialogTitle>Interview Complete</DialogTitle>
+            </div>
+            <DialogDescription>
+              Your 5-minute interview session has ended. Thank you for
+              participating!
+            </DialogDescription>
           </DialogHeader>
-          <DialogDescription>
-            Your 5-minute interview session has ended. Thank you for
-            participating!
-          </DialogDescription>
           <DialogFooter>
-            <button
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            <Button
               onClick={() => router.push(`/feedback/${jobId}`)}
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              Check Feedback
-            </button>
+              View Feedback
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <div className="text-xs text-gray-400 mt-4">
-        <div>Listening: {listening ? "Yes" : "No"}</div>
-        <div>Processing: {isProcessing ? "Yes" : "No"}</div>
-        <div>Current Question: {currentQuestion ? "Yes" : "No"}</div>
-        <div>Transcript: {transcript || "None"}</div>
-        <div>Countdown: {countdown !== null ? countdown : "Inactive"}</div>
-        <div>Timer: {timer}</div>
-      </div>
-    </Card>
+    </div>
   );
 }
