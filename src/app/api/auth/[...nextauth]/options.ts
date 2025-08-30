@@ -4,7 +4,6 @@ import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
-import redis from "@/lib/redis";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,27 +17,6 @@ export const authOptions: NextAuthOptions = {
       authorize: async (credentials) => {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
-        }
-
-        const cachedUser = await redis.get(`user:${credentials.email}`);
-        if (cachedUser) {
-          const user = JSON.parse(cachedUser);
-
-          const isPasswordCorrect = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-          if (!isPasswordCorrect)
-            throw new Error("Incorrect email or password");
-
-          return {
-            id: user.id,
-            role: user.role,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            image: user.image,
-          };
         }
 
         const user = await prisma.user.findUnique({
@@ -57,13 +35,6 @@ export const authOptions: NextAuthOptions = {
         if (!isPasswordCorrect) {
           throw new Error("Incorrect email or password");
         }
-
-        await redis.set(
-          `user:${user.email}`,
-          JSON.stringify(user),
-          "EX",
-          60 * 60 * 24 * 30
-        );
 
         return {
           id: user.id,
