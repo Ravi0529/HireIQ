@@ -24,6 +24,8 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 export default function QnASection({
@@ -40,8 +42,11 @@ export default function QnASection({
   const [error, setError] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const submissionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [timer, setTimer] = useState(300);
   const [interviewOver, setInterviewOver] = useState(false);
   const router = useRouter();
@@ -58,12 +63,59 @@ export default function QnASection({
       if (countdownRef.current) clearInterval(countdownRef.current);
       if (submissionTimeoutRef.current)
         clearTimeout(submissionTimeoutRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
 
+  const playAudio = async (audioBase64: string) => {
+    if (!audioEnabled) return;
+
+    try {
+      setIsPlayingAudio(true);
+      SpeechRecognition.stopListening();
+
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+
+      const audioBlob = await fetch(
+        `data:audio/mp3;base64,${audioBase64}`
+      ).then((response) => response.blob());
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      audioRef.current.src = audioUrl;
+      audioRef.current.onended = () => {
+        setIsPlayingAudio(false);
+        URL.revokeObjectURL(audioUrl);
+        if (!interviewOver) {
+          startListeningForQuestion();
+        }
+      };
+
+      audioRef.current.onerror = () => {
+        setIsPlayingAudio(false);
+        URL.revokeObjectURL(audioUrl);
+        console.error("Audio playback failed");
+        if (!interviewOver) {
+          startListeningForQuestion();
+        }
+      };
+
+      await audioRef.current.play();
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setIsPlayingAudio(false);
+      if (!interviewOver) {
+        startListeningForQuestion();
+      }
+    }
+  };
+
   const startListeningForQuestion = () => {
-    if (!browserSupportsSpeechRecognition) {
-      setError("Your browser does not support Speech Recognition.");
+    if (!browserSupportsSpeechRecognition || isPlayingAudio) {
       return;
     }
     resetTranscript();
@@ -77,14 +129,21 @@ export default function QnASection({
     try {
       setLoading(true);
       const response = await axios.get(`/api/interview/${applicationId}/qna`);
+
       if (response.data.currentQuestion) {
         setCurrentQuestion(response.data.currentQuestion);
+        if (response.data.audio) {
+          await playAudio(response.data.audio);
+        } else {
+          startListeningForQuestion();
+        }
       } else {
         setCurrentQuestion("");
       }
     } catch (error) {
       console.error("Failed to load question:", error);
       setError("Failed to load question.");
+      startListeningForQuestion();
     } finally {
       setLoading(false);
     }
@@ -95,12 +154,12 @@ export default function QnASection({
   }, [applicationId]);
 
   useEffect(() => {
-    if (currentQuestion && !isProcessing && !loading) {
-      setTimeout(() => {
+    if (currentQuestion && !isProcessing && !loading && !isPlayingAudio) {
+      if (!audioEnabled) {
         startListeningForQuestion();
-      }, 500);
+      }
     }
-  }, [currentQuestion, isProcessing, loading]);
+  }, [currentQuestion, isProcessing, loading, isPlayingAudio, audioEnabled]);
 
   useEffect(() => {
     if (submissionTimeoutRef.current) {
@@ -113,7 +172,8 @@ export default function QnASection({
     }
     setCountdown(null);
 
-    if (!listening || !currentQuestion || isProcessing) return;
+    if (!listening || !currentQuestion || isProcessing || isPlayingAudio)
+      return;
 
     if (transcript) {
       submissionTimeoutRef.current = setTimeout(() => {
@@ -126,13 +186,16 @@ export default function QnASection({
         clearTimeout(submissionTimeoutRef.current);
       }
     };
-  }, [transcript, listening, currentQuestion, isProcessing]);
+  }, [transcript, listening, currentQuestion, isProcessing, isPlayingAudio]);
 
   useEffect(() => {
     if (interviewOver) return;
     if (timer <= 0) {
       setInterviewOver(true);
       SpeechRecognition.stopListening();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       return;
     }
     const interval = setInterval(() => {
@@ -161,11 +224,16 @@ export default function QnASection({
   };
 
   const handleStopAndSend = async () => {
-    if (!transcript.trim() || loading || isProcessing || interviewOver) return;
+    if (
+      !transcript.trim() ||
+      loading ||
+      isProcessing ||
+      interviewOver ||
+      isPlayingAudio
+    )
+      return;
 
     SpeechRecognition.stopListening();
-
-    console.log("Sending answer:", transcript.trim());
 
     setIsProcessing(true);
     setError("");
@@ -183,6 +251,13 @@ export default function QnASection({
         resetTranscript();
         if (response.data.question) {
           setCurrentQuestion(response.data.question);
+
+          if (response.data.audio) {
+            await playAudio(response.data.audio);
+          } else {
+            startListeningForQuestion();
+          }
+
           toast.success("Answer submitted successfully!");
         } else {
           setCurrentQuestion("");
@@ -195,6 +270,7 @@ export default function QnASection({
       console.error("Error submitting answer:", error);
       setError("Failed to submit answer.");
       toast.error("Failed to submit answer. Please try again.");
+      startListeningForQuestion();
     } finally {
       setIsProcessing(false);
       setCountdown(null);
@@ -210,8 +286,16 @@ export default function QnASection({
   };
 
   const retryListening = () => {
+    if (isPlayingAudio) return;
     resetTranscript();
     startListeningForQuestion();
+  };
+
+  const toggleAudio = () => {
+    setAudioEnabled(!audioEnabled);
+    if (!audioEnabled && currentQuestion && !isPlayingAudio) {
+      fetchCurrentQuestion();
+    }
   };
 
   useEffect(() => {
@@ -221,6 +305,10 @@ export default function QnASection({
       if (countdownRef.current) clearInterval(countdownRef.current);
       if (submissionTimeoutRef.current)
         clearTimeout(submissionTimeoutRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsPlayingAudio(false);
     }
   }, [forceEnd]);
 
@@ -233,8 +321,25 @@ export default function QnASection({
             Time Remaining
           </span>
         </div>
-        <div className="text-sm font-bold text-blue-800">
-          {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-bold text-blue-800">
+            {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleAudio}
+            className={`p-2 ${
+              audioEnabled ? "text-blue-600" : "text-gray-400"
+            }`}
+            title={audioEnabled ? "Disable audio" : "Enable audio"}
+          >
+            {audioEnabled ? (
+              <Volume2 className="h-4 w-4" />
+            ) : (
+              <VolumeX className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -254,9 +359,27 @@ export default function QnASection({
       {currentQuestion && !interviewOver && (
         <div className="space-y-4">
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
-              Current Question
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-700">
+                Current Question
+              </h3>
+              {isPlayingAudio && (
+                <div className="flex items-center gap-1 text-blue-600 text-xs">
+                  <div className="flex gap-1">
+                    <span className="w-1 h-1 bg-blue-600 rounded-full animate-bounce"></span>
+                    <span
+                      className="w-1 h-1 bg-blue-600 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></span>
+                    <span
+                      className="w-1 h-1 bg-blue-600 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></span>
+                  </div>
+                  <span>Playing audio...</span>
+                </div>
+              )}
+            </div>
             <p className="text-gray-900">{currentQuestion}</p>
           </div>
 
@@ -267,7 +390,11 @@ export default function QnASection({
             </h3>
             <div className="min-h-20 p-3 bg-gray-50 rounded border border-gray-200 text-gray-800">
               {transcript ||
-                (listening ? "Listening..." : "Waiting for your response...")}
+                (listening
+                  ? "Listening..."
+                  : isPlayingAudio
+                  ? "Waiting for question audio..."
+                  : "Waiting for your response...")}
             </div>
 
             <div className="mt-3">
@@ -278,7 +405,7 @@ export default function QnASection({
                 </div>
               )}
 
-              {listening && !countdown && (
+              {listening && !countdown && !isPlayingAudio && (
                 <div className="flex items-center gap-2 text-green-600 text-sm">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   Listening for your answer...
@@ -296,7 +423,9 @@ export default function QnASection({
             <div className="flex gap-2 mt-4">
               <Button
                 onClick={retryListening}
-                disabled={listening || isProcessing || loading}
+                disabled={
+                  listening || isProcessing || loading || isPlayingAudio
+                }
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-2"
@@ -305,10 +434,10 @@ export default function QnASection({
                 {listening ? "Listening..." : "Restart Listening"}
               </Button>
 
-              {transcript && (
+              {transcript && !isPlayingAudio && (
                 <Button
                   onClick={handleStopAndSend}
-                  disabled={isProcessing || loading}
+                  disabled={isProcessing || loading || isPlayingAudio}
                   size="sm"
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
                 >

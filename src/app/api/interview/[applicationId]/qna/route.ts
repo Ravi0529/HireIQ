@@ -1,5 +1,3 @@
-// model: "gemini-2.5-flash-preview-tts" (for tts)
-
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import OpenAI from "openai";
@@ -132,6 +130,26 @@ const generateNextQuestion = async ({
   }
 };
 
+const generateTTS = async (question: string) => {
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const ttsResponse = await openai.audio.speech.create({
+      model: "gpt-4o-mini-tts",
+      voice: "alloy",
+      input: question,
+    });
+
+    const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
+    return audioBuffer.toString("base64");
+  } catch (error) {
+    console.error("Error generating TTS: ", error);
+    return null;
+  }
+};
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ applicationId: string }> }
@@ -244,6 +262,8 @@ export async function GET(
         );
       }
 
+      const audioBase64 = await generateTTS(firstQuestion);
+
       await prisma.qnA.create({
         data: {
           interviewInfoId: interviewInfo.id,
@@ -269,6 +289,14 @@ export async function GET(
             },
           },
         },
+      });
+
+      return NextResponse.json({
+        qnas: interviewInfo?.qnas || [],
+        currentQuestion: firstQuestion,
+        audio: audioBase64,
+        interviewOver: false,
+        timeLeft: Math.max(0, 300 - Math.floor(elapsed)),
       });
     }
 
@@ -432,6 +460,8 @@ export async function POST(
         );
       }
 
+      const audioBase64 = await generateTTS(firstQuestion);
+
       const newQnA = await prisma.qnA.create({
         data: {
           interviewInfoId,
@@ -443,6 +473,7 @@ export async function POST(
       return NextResponse.json({
         success: true,
         question: firstQuestion,
+        audio: audioBase64,
         qnaId: newQnA.id,
         interviewOver: false,
         timeLeft: Math.max(0, 300 - Math.floor(elapsed)),
@@ -501,6 +532,8 @@ export async function POST(
       );
     }
 
+    const audioBase64 = await generateTTS(nextQuestion);
+
     const newQnA = await prisma.qnA.create({
       data: {
         interviewInfoId,
@@ -512,6 +545,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       question: nextQuestion,
+      audio: audioBase64,
       qnaId: newQnA.id,
       interviewOver: false,
       timeLeft: Math.max(0, 300 - Math.floor(elapsed)),
