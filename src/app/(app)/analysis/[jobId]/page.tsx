@@ -15,10 +15,20 @@ import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
   Download,
-  User,
   Briefcase,
   FileText,
   BarChart3,
+  Brain,
+  Target,
+  TrendingUp,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Crown,
+  Star,
+  Award,
+  GraduationCap,
+  Loader2,
 } from "lucide-react";
 import {
   Radar,
@@ -108,7 +118,7 @@ interface JobAnalysisData {
   };
 }
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const BLUE_PALETTE = ["#1e40af", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
 export default function JobAnalysisPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -117,6 +127,9 @@ export default function JobAnalysisPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedApplicant, setSelectedApplicant] =
     useState<ApplicantAnalysis | null>(null);
+  const [expandedApplicant, setExpandedApplicant] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -145,8 +158,8 @@ export default function JobAnalysisPage() {
 
   const downloadApplicantAnalysis = (applicant: ApplicantAnalysis) => {
     const analysisText = `
-      Candidate Analysis Report
-      ========================
+      AI Interview Analysis Report
+      ============================
       
       Candidate: ${applicant.applicant.firstName} ${
       applicant.applicant.lastName
@@ -181,32 +194,54 @@ export default function JobAnalysisPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `analysis-${applicant.applicant.firstName}-${applicant.applicant.lastName}.txt`;
+    a.download = `ai-analysis-${applicant.applicant.firstName}-${applicant.applicant.lastName}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
+  const toggleApplicantExpand = (applicantId: string) => {
+    setExpandedApplicant(
+      expandedApplicant === applicantId ? null : applicantId
+    );
+  };
+
   if (loading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        Loading job analysis...
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+        <Card className="w-full max-w-md border-0 shadow-lg rounded-2xl overflow-hidden">
+          <div className="bg-blue-600 p-1"></div>
+          <CardContent className="p-8 flex flex-col items-center justify-center">
+            <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
+            <p className="text-gray-600 text-center">
+              Loading AI analysis data...
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="bg-destructive/10 border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Error
-            </CardTitle>
-            <CardDescription>{error}</CardDescription>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-6">
+        <Card className="w-full max-w-md border-blue-200 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <CardTitle className="text-red-700">Analysis Error</CardTitle>
+            <CardDescription className="text-red-600">{error}</CardDescription>
           </CardHeader>
+          <CardContent className="text-center">
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            >
+              Try Again
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
@@ -214,12 +249,17 @@ export default function JobAnalysisPage() {
 
   if (!data || data.applications.length === 0) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>No Analysis Available</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-6">
+        <Card className="w-full max-w-md border-blue-200 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Brain className="h-6 w-6 text-blue-600" />
+            </div>
+            <CardTitle className="text-blue-800">
+              No Analysis Available
+            </CardTitle>
             <CardDescription>
-              No applications with analysis data found for this job.
+              No applications with AI analysis data found for this job.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -227,7 +267,6 @@ export default function JobAnalysisPage() {
     );
   }
 
-  // Prepare data for charts
   const scoreDistributionData = [
     { name: "0-2", value: data.statistics.scoreDistribution[0] },
     { name: "2-4", value: data.statistics.scoreDistribution[1] },
@@ -265,368 +304,524 @@ export default function JobAnalysisPage() {
     : [];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Job Analysis Dashboard</h1>
-          <p className="text-muted-foreground">
-            AI-powered analysis for {data.job.title}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white p-6">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-100 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-blue-900 flex items-center gap-2">
+                <Brain className="h-8 w-8 text-blue-600" />
+                AI Interview Analysis
+              </h1>
+              <p className="text-blue-700 mt-2">
+                Intelligent candidate evaluation for {data.job.title}
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <Badge
+                variant="outline"
+                className="bg-blue-100 text-blue-800 border-blue-300"
+              >
+                <Target className="h-3 w-3 mr-1" />
+                {data.applications.length} Candidates Analyzed
+              </Badge>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Overall Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Applications
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.statistics.totalApplications}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Total Applications
+              </CardTitle>
+              <Users className="h-5 w-5 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-900">
+                {data.statistics.totalApplications}
+              </div>
+              <p className="text-xs text-blue-600 mt-1">Candidates processed</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.statistics.acceptedApplications}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {(
-                (data.statistics.acceptedApplications /
-                  data.statistics.totalApplications) *
-                100
-              ).toFixed(1)}
-              % acceptance rate
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Accepted
+              </CardTitle>
+              <Award className="h-5 w-5 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-700">
+                {data.statistics.acceptedApplications}
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                {(
+                  (data.statistics.acceptedApplications /
+                    data.statistics.totalApplications) *
+                  100
+                ).toFixed(1)}
+                % success rate
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.statistics.averageScore}/10
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Average Score
+              </CardTitle>
+              <BarChart3 className="h-5 w-5 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-900">
+                {data.statistics.averageScore}/10
+              </div>
+              <div className="flex items-center mt-1">
+                <div className="w-full bg-blue-100 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full"
+                    style={{ width: `${data.statistics.averageScore * 10}%` }}
+                  ></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Rejection Rate
-            </CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.statistics.rejectionRate.toFixed(1)}%
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Rejection Rate
+              </CardTitle>
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-900">
+                {data.statistics.rejectionRate.toFixed(1)}%
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                Of total applications
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Score Distribution Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Score Distribution</CardTitle>
-            <CardDescription>
-              How applicants are distributed across score ranges
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={scoreDistributionData}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+            <CardHeader>
+              <CardTitle className="text-blue-900 flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-600" />
+                Score Distribution
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                How candidates are distributed across score ranges
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={scoreDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {scoreDistributionData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={BLUE_PALETTE[index % BLUE_PALETTE.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+            <CardHeader>
+              <CardTitle className="text-blue-900 flex items-center gap-2">
+                <Brain className="h-5 w-5 text-blue-600" />
+                Skills Assessment
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                Average performance across key evaluation areas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
+                    outerRadius="80%"
+                    data={categoryScoresData}
                   >
-                    {scoreDistributionData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+                    <PolarGrid stroke="#3b82f6" opacity={0.3} />
+                    <PolarAngleAxis
+                      dataKey="name"
+                      tick={{ fill: "#1e40af", fontSize: 12 }}
+                    />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 10]}
+                      tick={{ fill: "#1e40af", fontSize: 10 }}
+                    />
+                    <Radar
+                      name="Average"
+                      dataKey="value"
+                      stroke="#1e40af"
+                      fill="#3b82f6"
+                      fillOpacity={0.3}
+                    />
+                    <Tooltip />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Average Category Scores Radar Chart */}
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
           <CardHeader>
-            <CardTitle>Average Category Scores</CardTitle>
-            <CardDescription>
-              Average performance across key areas
+            <CardTitle className="text-blue-900 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Candidate Analysis
+            </CardTitle>
+            <CardDescription className="text-blue-700">
+              {data.applications.length} candidates with AI-powered interview
+              analysis
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart
-                  cx="50%"
-                  cy="50%"
-                  outerRadius="80%"
-                  data={categoryScoresData}
+            <div className="space-y-3">
+              {data.applications.map((applicant) => (
+                <div
+                  key={applicant.id}
+                  className={`bg-white rounded-xl border border-blue-100 p-4 transition-all hover:shadow-md ${
+                    selectedApplicant?.id === applicant.id
+                      ? "ring-2 ring-blue-500 ring-opacity-50"
+                      : ""
+                  }`}
                 >
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="name" />
-                  <PolarRadiusAxis angle={30} domain={[0, 10]} />
-                  <Radar
-                    name="Average"
-                    dataKey="value"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
-                    fillOpacity={0.3}
-                  />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Applicants List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Applicants Analysis</CardTitle>
-          <CardDescription>
-            {data.applications.length} candidates with interview analysis
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {data.applications.map((applicant) => (
-              <Card
-                key={applicant.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedApplicant?.id === applicant.id
-                    ? "border-primary border-2"
-                    : ""
-                }`}
-                onClick={() => setSelectedApplicant(applicant)}
-              >
-                <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="h-6 w-6 text-primary" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-medium">
+                          {applicant.applicant.firstName[0]}
+                          {applicant.applicant.lastName[0]}
                         </div>
                       </div>
                       <div>
-                        <h4 className="font-semibold">
+                        <h4 className="font-semibold text-blue-900">
                           {applicant.applicant.firstName}{" "}
                           {applicant.applicant.lastName}
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-blue-600">
                           {applicant.applicant.email}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">
-                        {applicant.overallScore}/10
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="text-2xl font-bold text-blue-900 bg-blue-50 px-3 py-1 rounded-lg">
+                          {applicant.overallScore}/10
+                        </div>
+                        <Badge
+                          variant={
+                            applicant.status === "Accepted"
+                              ? "default"
+                              : applicant.status === "Rejected"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="flex items-center gap-1"
+                        >
+                          {applicant.status === "Accepted" && (
+                            <Crown className="h-3 w-3" />
+                          )}
+                          {applicant.status}
+                        </Badge>
                       </div>
-                      <Badge
-                        variant={
-                          applicant.status === "Accepted"
-                            ? "default"
-                            : applicant.status === "Rejected"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {applicant.status}
-                      </Badge>
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-300 hover:bg-blue-50 cursor-pointer h-8"
+                          onClick={() => setSelectedApplicant(applicant)}
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-300 hover:bg-blue-50 cursor-pointer h-8"
+                          onClick={() => toggleApplicantExpand(applicant.id)}
+                        >
+                          {expandedApplicant === applicant.id ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
+                  </div>
+
+                  {expandedApplicant === applicant.id && (
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="font-medium text-blue-800 mb-2">
+                            Skills Assessment
+                          </h5>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-blue-700">
+                                Communication
+                              </span>
+                              <span className="font-medium text-blue-900">
+                                {applicant.scores.communication}/10
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-blue-700">Technical</span>
+                              <span className="font-medium text-blue-900">
+                                {applicant.scores.technical}/10
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-blue-700">Relevance</span>
+                              <span className="font-medium text-blue-900">
+                                {applicant.scores.relevance}/10
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-blue-700">
+                                Problem Solving
+                              </span>
+                              <span className="font-medium text-blue-900">
+                                {applicant.scores.problemSolving}/10
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-blue-800 mb-2">
+                            Actions
+                          </h5>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {selectedApplicant && (
+          <div className="space-y-6">
+            <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-blue-900 text-2xl">
+                      {selectedApplicant.applicant.firstName}{" "}
+                      {selectedApplicant.applicant.lastName}
+                    </CardTitle>
+                    <CardDescription className="text-blue-700">
+                      Detailed AI analysis and evaluation
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => downloadApplicantAnalysis(selectedApplicant)}
+                    className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Full Report
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+                <CardHeader>
+                  <CardTitle className="text-blue-900 flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-blue-600" />
+                    Skills Radar
+                  </CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Candidate&apos;s performance across evaluation areas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart
+                        cx="50%"
+                        cy="50%"
+                        outerRadius="80%"
+                        data={selectedApplicantCategoryScores}
+                      >
+                        <PolarGrid stroke="#3b82f6" opacity={0.3} />
+                        <PolarAngleAxis
+                          dataKey="name"
+                          tick={{ fill: "#1e40af", fontSize: 12 }}
+                        />
+                        <PolarRadiusAxis
+                          angle={30}
+                          domain={[0, 10]}
+                          tick={{ fill: "#1e40af", fontSize: 10 }}
+                        />
+                        <Radar
+                          name="Candidate"
+                          dataKey="value"
+                          stroke="#1e40af"
+                          fill="#3b82f6"
+                          fillOpacity={0.3}
+                        />
+                        <Tooltip />
+                      </RadarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Selected Applicant Details */}
-      {selectedApplicant && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">
-              {selectedApplicant.applicant.firstName}{" "}
-              {selectedApplicant.applicant.lastName}
-            </h2>
-            <Button
-              onClick={() => downloadApplicantAnalysis(selectedApplicant)}
-              className="gap-2 cursor-pointer"
-            >
-              <Download className="h-4 w-4" />
-              Download Analysis
-            </Button>
-          </div>
-
-          {/* Selected Applicant Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Skills Assessment</CardTitle>
-                <CardDescription>
-                  Candidate&apos;s performance across key areas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart
-                      cx="50%"
-                      cy="50%"
-                      outerRadius="80%"
-                      data={selectedApplicantCategoryScores}
-                    >
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="name" />
-                      <PolarRadiusAxis angle={30} domain={[0, 10]} />
-                      <Radar
-                        name="Candidate"
-                        dataKey="value"
-                        stroke="#3b82f6"
-                        fill="#3b82f6"
-                        fillOpacity={0.3}
-                      />
-                      <Tooltip />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Score Breakdown</CardTitle>
-                <CardDescription>Detailed performance metrics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={selectedApplicantCategoryScores}>
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 10]} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" name="Score" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Selected Applicant Details */}
-          <div className="grid grid-cols-1 gap-6">
-            {/* Resume Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Summary</CardTitle>
-                <CardDescription>
-                  Candidate&apos;s background information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-foreground/90">
-                    {selectedApplicant.resumeSummary}
-                  </p>
-                </div>
-                {selectedApplicant.applicant.profile && (
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Education:</span>{" "}
-                      {selectedApplicant.applicant.profile.education}
-                    </div>
-                    <div>
-                      <span className="font-medium">Institute:</span>{" "}
-                      {selectedApplicant.applicant.profile.instituteName}
-                    </div>
-                    <div>
-                      <span className="font-medium">Experience:</span>{" "}
-                      {selectedApplicant.applicant.profile.experience}
-                    </div>
+              <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+                <CardHeader>
+                  <CardTitle className="text-blue-900 flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-blue-600" />
+                    Score Breakdown
+                  </CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Detailed performance metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={selectedApplicantCategoryScores}>
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: "#1e40af", fontSize: 12 }}
+                        />
+                        <YAxis
+                          domain={[0, 10]}
+                          tick={{ fill: "#1e40af", fontSize: 10 }}
+                        />
+                        <Tooltip />
+                        <Legend />
+                        <Bar
+                          dataKey="value"
+                          name="Score"
+                          fill="#3b82f6"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* AI Analysis */}
-            {selectedApplicant.analysis && (
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>AI Analysis Summary</CardTitle>
-                    <CardDescription>
-                      Comprehensive evaluation of candidate performance
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-foreground/90">
-                        {selectedApplicant.analysis.summary}
-                      </p>
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+                <CardHeader>
+                  <CardTitle className="text-blue-900 flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    Resume Summary
+                  </CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Candidate&apos;s background and qualifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose prose-sm max-w-none text-blue-900">
+                    <p>{selectedApplicant.resumeSummary}</p>
+                  </div>
+                  {selectedApplicant.applicant.profile && (
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-blue-50 p-4 rounded-lg">
+                      <div className="flex items-center">
+                        <GraduationCap className="h-4 w-4 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-800">
+                          Education:
+                        </span>
+                        <span className="ml-2 text-blue-700">
+                          {selectedApplicant.applicant.profile.education}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Briefcase className="h-4 w-4 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-800">
+                          Institute:
+                        </span>
+                        <span className="ml-2 text-blue-700">
+                          {selectedApplicant.applicant.profile.instituteName}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-800">
+                          Experience:
+                        </span>
+                        <span className="ml-2 text-blue-700">
+                          {selectedApplicant.applicant.profile.experience}
+                        </span>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </CardContent>
+              </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Detailed Analysis</CardTitle>
-                    <CardDescription>
-                      In-depth assessment metrics
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {selectedApplicant.analysis.aiAnalysis.map(
-                        (item: string, index: number) => (
-                          <div key={index} className="flex items-start gap-3">
-                            <Badge variant="outline" className="mt-1">
-                              {index + 1}
-                            </Badge>
-                            <p className="text-foreground/90">{item}</p>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
+              {selectedApplicant.analysis && (
+                <>
+                  <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+                    <CardHeader>
+                      <CardTitle className="text-blue-900 flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-blue-600" />
+                        Detailed Analysis
+                      </CardTitle>
+                      <CardDescription className="text-blue-700">
+                        In-depth assessment metrics from AI evaluation
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {selectedApplicant.analysis.aiAnalysis.map(
+                          (item: string, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg"
+                            >
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-100 text-blue-700 border-blue-300 mt-1"
+                              >
+                                {index + 1}
+                              </Badge>
+                              <p className="text-blue-900">{item}</p>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
