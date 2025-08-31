@@ -7,6 +7,7 @@ export interface JobFormValues {
   salary: string;
   requiredSkills: string[];
   workStatus: string;
+  status: string;
   updatedAt: string;
   createdBy?: {
     id?: string;

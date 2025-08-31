@@ -14,7 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  X,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge"; // Add this import
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   Fresher: "Fresher",
@@ -145,9 +147,19 @@ export default function JobList() {
 
                     <div className="flex-1">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-1 md:mb-0">
-                          {job.title}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xl font-semibold text-gray-800 mb-1 md:mb-0">
+                            {job.title}
+                          </h3>
+                          {job.status === "Closed" && (
+                            <Badge
+                              variant="outline"
+                              className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs"
+                            >
+                              Job Closed
+                            </Badge>
+                          )}
+                        </div>
                         <span className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                           {job._count?.applications || 0} applications
                         </span>

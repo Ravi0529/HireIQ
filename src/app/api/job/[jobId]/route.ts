@@ -234,7 +234,7 @@ export const PUT = async (
   }
 };
 
-export const DELETE = async (
+export const PATCH = async (
   req: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) => {
@@ -251,6 +251,18 @@ export const DELETE = async (
       },
       {
         status: 401,
+      }
+    );
+  }
+
+  if (user?.role?.toLowerCase() !== "recruiter") {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Forbidden - Only recruiters can manage jobs",
+      },
+      {
+        status: 403,
       }
     );
   }
@@ -278,7 +290,7 @@ export const DELETE = async (
       return NextResponse.json(
         {
           success: false,
-          error: "Forbidden - You can only delete your own jobs",
+          error: "Forbidden - You can only manage your own jobs",
         },
         {
           status: 403,
@@ -286,9 +298,14 @@ export const DELETE = async (
       );
     }
 
-    await prisma.job.delete({
+    const newStatus = job.status === "Open" ? "Closed" : "Open";
+    const updatedJob = await prisma.job.update({
       where: {
         id: jobId,
+      },
+      data: {
+        status: newStatus,
+        updatedAt: new Date(),
       },
     });
 
@@ -296,10 +313,10 @@ export const DELETE = async (
 
     return NextResponse.json({
       success: true,
-      message: "Job deleted successfully",
+      job: updatedJob,
     });
   } catch (error) {
-    console.error("Error deleting job:", error);
+    console.error("Error updating job status:", error);
     return NextResponse.json(
       {
         success: false,

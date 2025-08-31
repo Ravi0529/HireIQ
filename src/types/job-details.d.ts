@@ -7,6 +7,7 @@ export interface JobDetailsType {
   salary: string;
   requiredSkills: string[];
   workStatus: string;
+  status: string;
   updatedAt: string;
   createdAt: string;
   createdBy?: {

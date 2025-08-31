@@ -23,19 +23,11 @@ import {
   IndianRupee,
   FileText,
   CheckCircle,
+  X,
 } from "lucide-react";
 import type { JobDetailsType } from "@/types/job-details";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   Fresher: "Fresher",
@@ -101,17 +93,21 @@ export default function JobDetails() {
       .finally(() => setLoading(false));
   }, [jobId, user]);
 
-  const handleDelete = async () => {
-    if (!jobId) return;
-    setDeleteLoading(true);
+  const handleToggleJobStatus = async () => {
+    if (!job) return;
     try {
-      await axios.delete(`/api/job/${jobId}`);
-      router.replace("/companies");
+      const response = await axios.patch(`/api/job/${jobId}`);
+      if (response.data.job) {
+        setJob(response.data.job);
+        toast.success(
+          `Job ${
+            response.data.job.status === "Closed" ? "closed" : "reopened"
+          } successfully`
+        );
+      }
     } catch (error) {
       console.log(error);
-      setError("Failed to delete job");
-    } finally {
-      setDeleteLoading(false);
+      toast.error("Failed to update job status");
     }
   };
 
@@ -198,7 +194,6 @@ export default function JobDetails() {
                     <CheckCircle className="w-4 h-4" />
                     <span className="text-sm">
                       {applicationStatus.status === "Applied" ||
-                      "Reviewing" ||
                       "Accepted" ||
                       "Rejected"
                         ? "Application Submitted"
@@ -279,6 +274,17 @@ export default function JobDetails() {
                 )}
 
                 <div className="space-y-4">
+                  {job.status === "Closed" && (
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="bg-yellow-100 text-yellow-800 border-yellow-300"
+                      >
+                        Job Closed
+                      </Badge>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2">
                     <IndianRupee className="w-4 h-4 text-blue-600" />
                     <span className="text-gray-700">{job.salary}</span>
@@ -322,7 +328,32 @@ export default function JobDetails() {
                 <div className="mt-6 space-y-3">
                   {role === "applicant" && (
                     <>
-                      {!applicationStatus.hasApplied ? (
+                      {applicationStatus.hasApplied &&
+                      applicationStatus.hasInterview ? (
+                        <Button
+                          onClick={handleViewFeedback}
+                          className="w-full bg-green-600 hover:bg-green-700 cursor-pointer"
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          View Feedback
+                        </Button>
+                      ) : applicationStatus.hasApplied ? (
+                        <Button
+                          disabled
+                          className="w-full bg-gray-400 cursor-not-allowed"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Application Submitted
+                        </Button>
+                      ) : job.status === "Closed" ? (
+                        <Button
+                          disabled
+                          className="w-full bg-blue-400 cursor-not-allowed"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Job Closed
+                        </Button>
+                      ) : (
                         <Button
                           onClick={handleApply}
                           disabled={applying}
@@ -340,22 +371,6 @@ export default function JobDetails() {
                             </>
                           )}
                         </Button>
-                      ) : applicationStatus.hasInterview ? (
-                        <Button
-                          onClick={handleViewFeedback}
-                          className="w-full bg-green-600 hover:bg-green-700 cursor-pointer"
-                        >
-                          <FileText className="w-4 h-4 mr-2" />
-                          View Feedback
-                        </Button>
-                      ) : (
-                        <Button
-                          disabled
-                          className="w-full bg-gray-400 cursor-not-allowed"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Application Submitted
-                        </Button>
                       )}
                     </>
                   )}
@@ -371,44 +386,24 @@ export default function JobDetails() {
                         Edit Job
                       </Button>
 
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            className="w-full cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Job
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete the job posting and remove all
-                              associated data from our servers.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={handleDelete}
-                              disabled={deleteLoading}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              {deleteLoading ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                  Deleting...
-                                </>
-                              ) : (
-                                "Delete Job"
-                              )}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button
+                        onClick={handleToggleJobStatus}
+                        variant={
+                          job.status === "Closed" ? "default" : "outline"
+                        }
+                        className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700"
+                      >
+                        {job.status === "Closed" ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Reopen Job
+                          </>
+                        ) : (
+                          <>
+                            <X className="w-4 h-4 mr-2" /> Close Job
+                          </>
+                        )}
+                      </Button>
 
                       <Button
                         onClick={() => alert("Analyze feature coming soon!")}
