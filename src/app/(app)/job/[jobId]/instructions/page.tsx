@@ -69,6 +69,29 @@ export default function InstructionsPage() {
     }
   }, [status, router]);
 
+  useEffect(() => {
+    const checkApplicationStatus = async () => {
+      if (!jobId || status !== "authenticated") return;
+
+      try {
+        const response = await axios.get(`/api/job/${jobId}/check-application`);
+
+        if (response.data.hasApplied && response.data.hasInterview) {
+          router.push(`/feedback/${response.data.applicationId}`);
+          toast.error("You have already completed the interview for this job");
+        } else if (response.data.hasApplied) {
+          toast.info(
+            "You have already applied for this job. You can proceed with the interview."
+          );
+        }
+      } catch (error) {
+        console.error("Error checking application status:", error);
+      }
+    };
+
+    checkApplicationStatus();
+  }, [jobId, status, router]);
+
   const handleMicCheck = async () => {
     setMicError(null);
     setMicChecking(true);

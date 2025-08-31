@@ -21,6 +21,8 @@ import {
   Loader2,
   ArrowLeft,
   IndianRupee,
+  FileText,
+  CheckCircle,
 } from "lucide-react";
 import type { JobDetailsType } from "@/types/job-details";
 import {
@@ -44,6 +46,13 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   SevenPlusYears: "7+ Years",
 };
 
+interface ApplicationStatus {
+  hasApplied: boolean;
+  applicationId?: string;
+  status?: string;
+  hasInterview: boolean;
+}
+
 export default function JobDetails() {
   const { data: session } = useSession();
   const user = session?.user as
@@ -61,9 +70,16 @@ export default function JobDetails() {
   const [applying, setApplying] = useState<boolean>(false);
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>(
+    {
+      hasApplied: false,
+      hasInterview: false,
+    }
+  );
 
   useEffect(() => {
-    if (!jobId) return;
+    if (!jobId || !user?.id) return;
+
     setLoading(true);
     setError(null);
     axios
@@ -73,6 +89,11 @@ export default function JobDetails() {
         if (user && response.data.createdBy?.id === user.id) {
           setIsOwner(true);
         }
+
+        return axios.get(`/api/job/${jobId}/check-application`);
+      })
+      .then((response) => {
+        setApplicationStatus(response.data);
       })
       .catch((error) =>
         setError(error?.response?.data?.error || "Failed to fetch job")
@@ -96,14 +117,21 @@ export default function JobDetails() {
 
   const handleApply = () => {
     setApplying(true);
+    if (applicationStatus.hasApplied) return;
     router.push(`/job/${jobId}/instructions`);
+  };
+
+  const handleViewFeedback = () => {
+    if (applicationStatus.applicationId) {
+      router.push(`/feedback/${applicationStatus.applicationId}`);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
         <div className="flex items-center gap-2 text-gray-600">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           Loading job details...
         </div>
       </div>
@@ -165,6 +193,19 @@ export default function JobDetails() {
                 <CardTitle className="text-2xl font-bold text-gray-800">
                   {job.title}
                 </CardTitle>
+                {applicationStatus.hasApplied && (
+                  <div className="flex items-center gap-2 text-green-600 mt-2">
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="text-sm">
+                      {applicationStatus.status === "Applied" ||
+                      "Reviewing" ||
+                      "Accepted" ||
+                      "Rejected"
+                        ? "Application Submitted"
+                        : "Interview Completed"}
+                    </span>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div
@@ -280,23 +321,43 @@ export default function JobDetails() {
 
                 <div className="mt-6 space-y-3">
                   {role === "applicant" && (
-                    <Button
-                      onClick={handleApply}
-                      disabled={applying}
-                      className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                    >
-                      {applying ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          Applying...
-                        </>
+                    <>
+                      {!applicationStatus.hasApplied ? (
+                        <Button
+                          onClick={handleApply}
+                          disabled={applying}
+                          className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                        >
+                          {applying ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              Applying...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Apply Now
+                            </>
+                          )}
+                        </Button>
+                      ) : applicationStatus.hasInterview ? (
+                        <Button
+                          onClick={handleViewFeedback}
+                          className="w-full bg-green-600 hover:bg-green-700 cursor-pointer"
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          View Feedback
+                        </Button>
                       ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          Apply Now
-                        </>
+                        <Button
+                          disabled
+                          className="w-full bg-gray-400 cursor-not-allowed"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Application Submitted
+                        </Button>
                       )}
-                    </Button>
+                    </>
                   )}
 
                   {isOwner && role === "recruiter" && (

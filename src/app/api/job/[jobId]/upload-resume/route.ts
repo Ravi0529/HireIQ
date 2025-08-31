@@ -49,6 +49,29 @@ export const POST = async (
       );
     }
 
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        jobId,
+        applicantId: userId,
+      },
+      include: {
+        InterviewInfo: true,
+      },
+    });
+
+    if (existingApplication && existingApplication.InterviewInfo.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "You have already applied and completed the interview for this job",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
     const formData = await req.formData();
     const resumeFile = formData.get("resume") as File;
     if (!resumeFile)
@@ -65,7 +88,6 @@ export const POST = async (
     const loader = new PDFLoader(resumeFile);
 
     const docs = await loader.load();
-    // console.log(docs[0].pageContent);
 
     const response = await openai.chat.completions.create({
       model: "gemini-2.0-flash",
@@ -82,7 +104,6 @@ export const POST = async (
       ],
     });
 
-    // console.log(response.choices[0].message.content);
     const resumeSummary = response.choices[0].message.content;
 
     let application = await prisma.application.findFirst({
@@ -96,20 +117,39 @@ export const POST = async (
         data: {
           jobId,
           applicantId: userId,
+          status: "Applied",
         },
       });
     }
     const applicationId = application.id;
 
-    await prisma.interviewInfo.create({
-      data: {
-        applicationId: applicationId,
-        resumeSummary: resumeSummary ?? "",
+    const existingInterviewInfo = await prisma.interviewInfo.findFirst({
+      where: {
+        applicationId,
       },
     });
 
+    if (existingInterviewInfo) {
+      await prisma.interviewInfo.update({
+        where: {
+          id: existingInterviewInfo.id,
+        },
+        data: {
+          resumeSummary: resumeSummary ?? "",
+        },
+      });
+    } else {
+      await prisma.interviewInfo.create({
+        data: {
+          applicationId: applicationId,
+          resumeSummary: resumeSummary ?? "",
+        },
+      });
+    }
+
     return NextResponse.json({
       success: true,
+      applicationId,
     });
   } catch (error) {
     console.error(error);
