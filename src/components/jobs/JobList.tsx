@@ -14,9 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  X,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge"; // Add this import
+import { Badge } from "@/components/ui/badge";
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   Fresher: "Fresher",

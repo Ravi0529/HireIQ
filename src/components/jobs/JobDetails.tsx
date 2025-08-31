@@ -15,7 +15,6 @@ import {
   User,
   Globe,
   Edit,
-  Trash2,
   BarChart3,
   Send,
   Loader2,
@@ -61,7 +60,6 @@ export default function JobDetails() {
   const [error, setError] = useState<string | null>(null);
   const [applying, setApplying] = useState<boolean>(false);
   const [isOwner, setIsOwner] = useState<boolean>(false);
-  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>(
     {
       hasApplied: false,
@@ -121,6 +119,10 @@ export default function JobDetails() {
     if (applicationStatus.applicationId) {
       router.push(`/feedback/${applicationStatus.applicationId}`);
     }
+  };
+
+  const handleViewAnalysis = () => {
+    router.push(`/analysis/${jobId}`);
   };
 
   if (loading) {
@@ -391,7 +393,7 @@ export default function JobDetails() {
                         variant={
                           job.status === "Closed" ? "default" : "outline"
                         }
-                        className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700"
+                        className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 text-white hover:text-white"
                       >
                         {job.status === "Closed" ? (
                           <>
@@ -406,7 +408,7 @@ export default function JobDetails() {
                       </Button>
 
                       <Button
-                        onClick={() => alert("Analyze feature coming soon!")}
+                        onClick={handleViewAnalysis}
                         variant="secondary"
                         className="w-full cursor-pointer"
                       >

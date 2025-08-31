@@ -59,7 +59,7 @@ export const POST = async (
       },
     });
 
-    if (existingApplication && existingApplication.InterviewInfo.length > 0) {
+    if (existingApplication && existingApplication.InterviewInfo) {
       return NextResponse.json(
         {
           success: false,

@@ -42,7 +42,7 @@ export async function GET(
       hasApplied: true,
       applicationId: application.id,
       status: application.status,
-      hasInterview: application.InterviewInfo.length > 0,
+      hasInterview: !!application.InterviewInfo,
     });
   } catch (error) {
     console.error("Error checking application:", error);

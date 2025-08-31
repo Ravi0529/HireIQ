@@ -156,13 +156,16 @@ model Application {
   applicant     User              @relation(fields: [applicantId], references: [id])
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
-  InterviewInfo InterviewInfo[]
+  InterviewInfo InterviewInfo?
+  feedback      Feedback?
+  analysis      Analysis?
+  overallScore  Int?
 }
 
 model InterviewInfo {
   id            String      @id @default(uuid())
   application   Application @relation(fields: [applicationId], references: [id])
-  applicationId String
+  applicationId String      @unique
   resumeSummary String
   qnas          QnA[]
   createdAt     DateTime    @default(now())
@@ -176,4 +179,23 @@ model QnA {
   question        String
   answer          String
   createdAt       DateTime      @default(now())
+}
+
+model Feedback {
+  id            String      @id @default(uuid())
+  application   Application @relation(fields: [applicationId], references: [id])
+  applicationId String      @unique
+  strengths     String[]
+  improvements  String[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Analysis {
+  id            String      @id @default(uuid())
+  application   Application @relation(fields: [applicationId], references: [id])
+  applicationId String      @unique
+  aiAnalysis    String[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
