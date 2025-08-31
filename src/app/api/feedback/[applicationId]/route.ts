@@ -30,6 +30,7 @@ export async function GET(
           },
         },
         feedback: true,
+        analysis: true,
       },
     });
 
@@ -52,6 +53,8 @@ export async function GET(
         qnas: application.InterviewInfo?.qnas || [],
         applicationStatus: application.status,
         overallScore: application.overallScore,
+        analysis: application.analysis,
+        resumeSummary: application.InterviewInfo?.resumeSummary || "",
         applicant: application.applicant,
         job: application.job,
       });
@@ -166,7 +169,40 @@ export async function GET(
           status: newStatus,
         },
       }),
+
+      prisma.analysis.create({
+        data: {
+          applicationId,
+          aiAnalysis: [
+            `Communication Score: ${scoreBreakdown?.communication || 0}/10`,
+            `Technical Knowledge Score: ${
+              scoreBreakdown?.technicalKnowledge || 0
+            }/10`,
+            `Relevance to Role Score: ${
+              scoreBreakdown?.relevanceToRole || 0
+            }/10`,
+            `Problem Solving Score: ${scoreBreakdown?.problemSolving || 0}/10`,
+            summary || "No summary available",
+          ],
+        },
+      }),
     ]);
+
+    const chartData = {
+      scores: {
+        overall: overallScore,
+        communication: scoreBreakdown?.communication || 0,
+        technicalKnowledge: scoreBreakdown?.technicalKnowledge || 0,
+        relevanceToRole: scoreBreakdown?.relevanceToRole || 0,
+        problemSolving: scoreBreakdown?.problemSolving || 0,
+      },
+      categoryScores: [
+        { name: "Communication", value: scoreBreakdown?.communication || 0 },
+        { name: "Technical", value: scoreBreakdown?.technicalKnowledge || 0 },
+        { name: "Relevance", value: scoreBreakdown?.relevanceToRole || 0 },
+        { name: "Problem Solving", value: scoreBreakdown?.problemSolving || 0 },
+      ],
+    };
 
     return NextResponse.json({
       success: true,
@@ -178,6 +214,12 @@ export async function GET(
       qnas,
       applicationStatus: newStatus,
       overallScore,
+      analysis: {
+        ...result[2],
+        summary,
+      },
+      chartData,
+      resumeSummary: application.InterviewInfo.resumeSummary,
       applicant: application.applicant,
       job: application.job,
     });

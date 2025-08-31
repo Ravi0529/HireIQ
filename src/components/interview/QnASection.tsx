@@ -464,7 +464,7 @@ export default function QnASection({
           </DialogHeader>
           <DialogFooter>
             <Button
-              onClick={() => router.push(`/feedback/${jobId}`)}
+              onClick={() => router.push(`/job/${jobId}`)}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               View Feedback
