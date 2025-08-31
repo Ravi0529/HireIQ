@@ -38,6 +38,22 @@ import {
   Cell,
 } from "recharts";
 
+interface Feedback {
+  id: string;
+  strengths: string[];
+  improvements: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Analysis {
+  id: string;
+  aiAnalysis: string[];
+  summary: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface ApplicantAnalysis {
   id: string;
   applicant: {
@@ -63,8 +79,8 @@ interface ApplicantAnalysis {
     relevance: number;
     problemSolving: number;
   };
-  feedback: any;
-  analysis: any;
+  feedback: Feedback | null;
+  analysis: Analysis | null;
   interviewDate: string;
   resumeSummary: string;
 }
