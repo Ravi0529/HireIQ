@@ -98,8 +98,7 @@ export default function FeedbackPage() {
       const margin = 15;
       let yPosition = margin;
 
-      // Add header
-      pdf.setFillColor(59, 130, 246); // Blue background
+      pdf.setFillColor(59, 130, 246);
       pdf.rect(0, 0, pageWidth, 40, "F");
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(20);
@@ -116,101 +115,138 @@ export default function FeedbackPage() {
 
       yPosition = 50;
 
-      // Candidate Information
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(16);
       pdf.text("Candidate Information", margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
-      pdf.text(
+      const candidateInfo = [
         `Name: ${data.applicant.firstName} ${data.applicant.lastName}`,
-        margin,
-        yPosition
-      );
-      yPosition += 8;
-      pdf.text(`Email: ${data.applicant.email}`, margin, yPosition);
-      yPosition += 8;
-      pdf.text(`Position: ${data.job.title}`, margin, yPosition);
-      yPosition += 15;
+        `Email: ${data.applicant.email}`,
+        `Position: ${data.job.title}`,
+      ];
 
-      // Overall Assessment
+      candidateInfo.forEach((info) => {
+        if (yPosition > pageHeight - 15) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(info, margin, yPosition);
+        yPosition += 8;
+      });
+      yPosition += 10;
+
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
       pdf.setFontSize(16);
       pdf.text("Overall Assessment", margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
-      pdf.text(`Score: ${data.overallScore}/10`, margin, yPosition);
-      yPosition += 8;
-      pdf.text(`Status: ${data.applicationStatus}`, margin, yPosition);
+      const assessmentInfo = [
+        `Score: ${data.overallScore}/10`,
+        `Status: ${data.applicationStatus}`,
+      ];
+
+      assessmentInfo.forEach((info) => {
+        if (yPosition > pageHeight - 15) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(info, margin, yPosition);
+        yPosition += 8;
+      });
       yPosition += 15;
 
-      // Check if we need a new page
-      if (yPosition > pageHeight - 50) {
+      if (yPosition > pageHeight - 30) {
         pdf.addPage();
         yPosition = margin;
       }
 
-      // Strengths
       pdf.setFontSize(16);
       pdf.text("Strengths", margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
       data.feedback.strengths.forEach((strength, index) => {
-        if (yPosition > pageHeight - 20) {
-          pdf.addPage();
-          yPosition = margin;
-        }
-        pdf.text(`${index + 1}. ${strength}`, margin + 5, yPosition);
-        yPosition += 8;
+        const lines = pdf.splitTextToSize(
+          `${index + 1}. ${strength}`,
+          pageWidth - 2 * margin
+        );
+
+        lines.forEach((line: string) => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 4;
       });
       yPosition += 8;
 
-      // Check if we need a new page
-      if (yPosition > pageHeight - 50) {
+      if (yPosition > pageHeight - 30) {
         pdf.addPage();
         yPosition = margin;
       }
 
-      // Areas for Improvement
       pdf.setFontSize(16);
       pdf.text("Areas for Improvement", margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
       data.feedback.improvements.forEach((improvement, index) => {
-        if (yPosition > pageHeight - 20) {
-          pdf.addPage();
-          yPosition = margin;
-        }
-        pdf.text(`${index + 1}. ${improvement}`, margin + 5, yPosition);
-        yPosition += 8;
+        const lines = pdf.splitTextToSize(
+          `${index + 1}. ${improvement}`,
+          pageWidth - 2 * margin
+        );
+
+        lines.forEach((line: string) => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 4;
       });
       yPosition += 15;
 
-      // Check if we need a new page
-      if (yPosition > pageHeight - 50) {
+      if (yPosition > pageHeight - 30) {
         pdf.addPage();
         yPosition = margin;
       }
 
-      // Interview Q&A
       pdf.setFontSize(16);
       pdf.text("Interview Questions & Answers", margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
       data.qnas.forEach((qna, index) => {
-        // Check if we need a new page before adding question
-        if (yPosition > pageHeight - 40) {
+        if (yPosition > pageHeight - 30) {
           pdf.addPage();
           yPosition = margin;
         }
 
         pdf.setFont("helvetica", "bold");
-        pdf.text(`Q${index + 1}: ${qna.question}`, margin, yPosition);
-        yPosition += 8;
+        const questionLines = pdf.splitTextToSize(
+          `Q${index + 1}: ${qna.question}`,
+          pageWidth - 2 * margin
+        );
+        questionLines.forEach((line: string) => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += 8;
+        });
 
         pdf.setFont("helvetica", "normal");
         const answerLines = pdf.splitTextToSize(
@@ -218,25 +254,24 @@ export default function FeedbackPage() {
           pageWidth - 2 * margin
         );
         answerLines.forEach((line: string) => {
-          if (yPosition > pageHeight - 20) {
+          if (yPosition > pageHeight - 15) {
             pdf.addPage();
             yPosition = margin;
           }
           pdf.text(line, margin + 5, yPosition);
           yPosition += 8;
         });
-        yPosition += 8;
+
+        yPosition += 12;
       });
 
-      // Footer
+      const currentPage = pdf.getNumberOfPages();
+      pdf.setPage(currentPage);
       pdf.setFontSize(10);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(
-        "Generated by AI Interview System",
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: "center" }
-      );
+      pdf.text("Generated by HireIQ", pageWidth / 2, pageHeight - 10, {
+        align: "center",
+      });
 
       pdf.save(
         `ai-feedback-${data.applicant.firstName}-${data.applicant.lastName}.pdf`
