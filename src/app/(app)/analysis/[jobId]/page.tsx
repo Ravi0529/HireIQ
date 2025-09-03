@@ -47,6 +47,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import jsPDF from "jspdf";
 
 interface Feedback {
   id: string;
@@ -130,6 +131,7 @@ export default function JobAnalysisPage() {
   const [expandedApplicant, setExpandedApplicant] = useState<string | null>(
     null
   );
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -157,48 +159,208 @@ export default function JobAnalysisPage() {
   }, [jobId]);
 
   const downloadApplicantAnalysis = (applicant: ApplicantAnalysis) => {
-    const analysisText = `
-      AI Interview Analysis Report
-      ============================
-      
-      Candidate: ${applicant.applicant.firstName} ${
-      applicant.applicant.lastName
-    }
-      Email: ${applicant.applicant.email}
-      Position: ${applicant.job.title}
-      Overall Score: ${applicant.overallScore}/10
-      Status: ${applicant.status}
-      Interview Date: ${new Date(applicant.interviewDate).toLocaleDateString()}
-      
-      RESUME SUMMARY:
-      ${applicant.resumeSummary}
-      
-      SCORE BREAKDOWN:
-      - Communication: ${applicant.scores.communication}/10
-      - Technical Knowledge: ${applicant.scores.technical}/10
-      - Relevance to Role: ${applicant.scores.relevance}/10
-      - Problem Solving: ${applicant.scores.problemSolving}/10
-      
-      ${
-        applicant.analysis
-          ? `AI ANALYSIS:
-      ${applicant.analysis.aiAnalysis.join("\n")}
-      
-      SUMMARY:
-      ${applicant.analysis.summary}`
-          : "No detailed analysis available"
-      }
-    `;
+    setGeneratingPDF(true);
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPosition = margin;
 
-    const blob = new Blob([analysisText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ai-analysis-${applicant.applicant.firstName}-${applicant.applicant.lastName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(0, 0, pageWidth, 40, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(20);
+      pdf.text("AI Interview Analysis Report", pageWidth / 2, 20, {
+        align: "center",
+      });
+      pdf.setFontSize(12);
+      pdf.text(
+        `Generated on ${new Date().toLocaleDateString()}`,
+        pageWidth / 2,
+        30,
+        { align: "center" }
+      );
+
+      yPosition = 50;
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(16);
+      pdf.text("Candidate Information", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      const candidateInfo = [
+        `Name: ${applicant.applicant.firstName} ${applicant.applicant.lastName}`,
+        `Email: ${applicant.applicant.email}`,
+        `Position: ${applicant.job.title}`,
+        `Interview Date: ${new Date(
+          applicant.interviewDate
+        ).toLocaleDateString()}`,
+        `Overall Score: ${applicant.overallScore}/10`,
+        `Status: ${applicant.status}`,
+      ];
+
+      candidateInfo.forEach((info) => {
+        if (yPosition > pageHeight - 15) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(info, margin, yPosition);
+        yPosition += 8;
+      });
+      yPosition += 10;
+
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      pdf.setFontSize(16);
+      pdf.text("Score Breakdown", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      const scoreInfo = [
+        `Communication: ${applicant.scores.communication}/10`,
+        `Technical Knowledge: ${applicant.scores.technical}/10`,
+        `Relevance to Role: ${applicant.scores.relevance}/10`,
+        `Problem Solving: ${applicant.scores.problemSolving}/10`,
+      ];
+
+      scoreInfo.forEach((info) => {
+        if (yPosition > pageHeight - 15) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(info, margin, yPosition);
+        yPosition += 8;
+      });
+      yPosition += 15;
+
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      pdf.setFontSize(16);
+      pdf.text("Resume Summary", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      const resumeLines = pdf.splitTextToSize(
+        applicant.resumeSummary,
+        pageWidth - 2 * margin
+      );
+      resumeLines.forEach((line: string) => {
+        if (yPosition > pageHeight - 15) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(line, margin, yPosition);
+        yPosition += 8;
+      });
+      yPosition += 15;
+
+      if (applicant.analysis) {
+        if (yPosition > pageHeight - 30) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(16);
+        pdf.text("AI Analysis Summary", margin, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        const summaryLines = pdf.splitTextToSize(
+          applicant.analysis.summary,
+          pageWidth - 2 * margin
+        );
+        summaryLines.forEach((line: string) => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 15;
+
+        if (yPosition > pageHeight - 30) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(16);
+        pdf.text("Detailed Analysis", margin, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        applicant.analysis.aiAnalysis.forEach((analysis, index) => {
+          const analysisLines = pdf.splitTextToSize(
+            `${index + 1}. ${analysis}`,
+            pageWidth - 2 * margin
+          );
+          analysisLines.forEach((line: string) => {
+            if (yPosition > pageHeight - 15) {
+              pdf.addPage();
+              yPosition = margin;
+            }
+            pdf.text(line, margin, yPosition);
+            yPosition += 8;
+          });
+          yPosition += 4;
+        });
+      }
+
+      if (applicant.applicant.profile) {
+        if (yPosition > pageHeight - 30) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(16);
+        pdf.text("Profile Information", margin, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        const profileInfo = [
+          `Education: ${applicant.applicant.profile.education}`,
+          `Institute: ${applicant.applicant.profile.instituteName}`,
+          `Experience: ${applicant.applicant.profile.experience}`,
+        ];
+
+        profileInfo.forEach((info) => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(info, margin, yPosition);
+          yPosition += 8;
+        });
+      }
+
+      const currentPage = pdf.getNumberOfPages();
+      pdf.setPage(currentPage);
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(
+        "Generated by AI Interview System",
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" }
+      );
+
+      pdf.save(
+        `ai-analysis-${applicant.applicant.firstName}-${applicant.applicant.lastName}.pdf`
+      );
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   const toggleApplicantExpand = (applicantId: string) => {
@@ -618,6 +780,19 @@ export default function JobAnalysisPage() {
                           <h5 className="font-medium text-blue-800 mb-2">
                             Actions
                           </h5>
+                          <Button
+                            size="sm"
+                            onClick={() => downloadApplicantAnalysis(applicant)}
+                            disabled={generatingPDF}
+                            className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer mb-2"
+                          >
+                            {generatingPDF ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4 mr-2" />
+                            )}
+                            {generatingPDF ? "Generating..." : "Download PDF"}
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -644,10 +819,17 @@ export default function JobAnalysisPage() {
                   </div>
                   <Button
                     onClick={() => downloadApplicantAnalysis(selectedApplicant)}
+                    disabled={generatingPDF}
                     className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Full Report
+                    {generatingPDF ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    {generatingPDF
+                      ? "Generating PDF..."
+                      : "Download PDF Report"}
                   </Button>
                 </div>
               </CardHeader>
@@ -765,7 +947,7 @@ export default function JobAnalysisPage() {
                         <span className="font-medium text-blue-800">
                           Institute:
                         </span>
-                        <span className="ml-2 text-blue-700">
+                        <span className="ml-2 text blue-700">
                           {selectedApplicant.applicant.profile.instituteName}
                         </span>
                       </div>
