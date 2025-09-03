@@ -90,50 +90,70 @@ export default function Home() {
             variants={fadeIn}
             className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
-            <Card className="border-blue-100 dark:border-blue-900/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Video className="h-4 w-4 text-blue-600" />
-                  Mock Interviews
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-gray-600 dark:text-gray-300">
-                Conduct structured AI-led interviews with live QnA.
-              </CardContent>
-            </Card>
-            <Card className="border-blue-100 dark:border-blue-900/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Brain className="h-4 w-4 text-blue-600" />
-                  Feedback Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-gray-600 dark:text-gray-300">
-                Get instant, explainable feedback on each response.
-              </CardContent>
-            </Card>
-            <Card className="border-blue-100 dark:border-blue-900/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Building2 className="h-4 w-4 text-blue-600" />
-                  Jobs & Companies
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-gray-600 dark:text-gray-300">
-                Explore roles, manage postings, and track applications.
-              </CardContent>
-            </Card>
-            <Card className="border-blue-100 dark:border-blue-900/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" />
-                  Role-based Access
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-gray-600 dark:text-gray-300">
-                Applicant and recruiter workflows with secure auth.
-              </CardContent>
-            </Card>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="border-blue-100 dark:border-blue-900/50 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Video className="h-4 w-4 text-blue-600" />
+                    Mock Interviews
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600 dark:text-gray-300">
+                  Conduct structured AI-led interviews with live QnA.
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="border-blue-100 dark:border-blue-900/50 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Brain className="h-4 w-4 text-blue-600" />
+                    Feedback Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600 dark:text-gray-300">
+                  Get instant, explainable feedback on each response.
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="border-blue-100 dark:border-blue-900/50 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    Jobs & Companies
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600 dark:text-gray-300">
+                  Explore roles, manage postings, and track applications.
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="border-blue-100 dark:border-blue-900/50 cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ShieldCheck className="h-4 w-4 text-blue-600" />
+                    Role-based Access
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600 dark:text-gray-300">
+                  Applicant and recruiter workflows with secure auth.
+                </CardContent>
+              </Card>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -175,7 +195,7 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
               >
-                <Card className="h-full">
+                <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow duration-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       {f.icon}
@@ -218,43 +238,60 @@ export default function Home() {
             variants={fadeUp}
             className="grid grid-cols-1 md:grid-cols-3 gap-4"
           >
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">For Applicants</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-2">
-                <p>Practice interviews and get actionable feedback.</p>
-                <p>Track applications and improve responses.</p>
-                <Button asChild size="sm" className="mt-2">
-                  <Link href={isAuthed ? "/companies" : "/signup"}>
-                    Start practicing
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">For Recruiters</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-2">
-                <p>Create roles, run interviews, and review analytics.</p>
-                <p>Hire faster with structured AI workflows.</p>
-                <Button asChild size="sm" variant="outline" className="mt-2">
-                  <Link href={isAuthed ? "/job/new" : "/signup"}>
-                    Post a role
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Privacy & Security</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-2">
-                <p>Your data stays protected with role-based access.</p>
-                <p>We only use information to improve your experience.</p>
-              </CardContent>
-            </Card>
+            <motion.div
+              whileHover={{ y: -2, scale: 1.01 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="cursor-pointer hover:shadow-md transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="text-base">For Applicants</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-2">
+                  <p>Practice interviews and get actionable feedback.</p>
+                  <p>Track applications and improve responses.</p>
+                  <Button asChild size="sm" className="mt-2">
+                    <Link href={isAuthed ? "/companies" : "/signup"}>
+                      Start practicing
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -2, scale: 1.01 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="cursor-pointer hover:shadow-md transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="text-base">For Recruiters</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-2">
+                  <p>Create roles, run interviews, and review analytics.</p>
+                  <p>Hire faster with structured AI workflows.</p>
+                  <Button asChild size="sm" variant="outline" className="mt-2">
+                    <Link href={isAuthed ? "/job/new" : "/signup"}>
+                      Post a role
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -2, scale: 1.01 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Card className="cursor-pointer hover:shadow-md transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    Privacy & Security
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-2">
+                  <p>Your data stays protected with role-based access.</p>
+                  <p>We only use information to improve your experience.</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           </motion.div>
         </div>
       </section>
