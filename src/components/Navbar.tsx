@@ -12,12 +12,16 @@ export default function Navbar() {
   const user: User = session?.user;
 
   return (
-    <nav className="sticky top-0 z-30 w-full bg-white border-b border-gray-200 shadow-sm font-sans">
+    <nav
+      role="navigation"
+      aria-label="Primary"
+      className="sticky top-0 z-30 w-full bg-background/80 supports-[backdrop-filter]:bg-background/60 backdrop-blur border-b border-border shadow-sm font-sans"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link
             href={session ? "/companies" : "/"}
-            className="flex items-center gap-2 group select-none"
+            className="flex items-center gap-2 group select-none hover:opacity-95 transition"
           >
             <span className="text-2xl font-bold tracking-tight text-blue-600">
               HireIQ
