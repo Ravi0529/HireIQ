@@ -26,6 +26,7 @@ import {
   Loader2,
 } from "lucide-react";
 import axios from "axios";
+import jsPDF from "jspdf";
 
 interface QnA {
   id: string;
@@ -61,6 +62,7 @@ export default function FeedbackPage() {
   const [data, setData] = useState<ApplicationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const fetchFeedback = async () => {
@@ -85,48 +87,166 @@ export default function FeedbackPage() {
     fetchFeedback();
   }, [applicationId]);
 
-  const downloadFeedback = () => {
+  const generatePDF = () => {
     if (!data) return;
 
-    const feedbackText = `
-      AI Interview Feedback Report
-      ============================
-      
-      Candidate: ${data.applicant.firstName} ${data.applicant.lastName}
-      Position: ${data.job.title}
-      Overall Score: ${data.overallScore}/10
-      Status: ${data.applicationStatus}
-      
-      STRENGTHS:
-      ${data.feedback.strengths
-        .map((strength, index) => `${index + 1}. ${strength}`)
-        .join("\n")}
-      
-      AREAS FOR IMPROVEMENT:
-      ${data.feedback.improvements
-        .map((improvement, index) => `${index + 1}. ${improvement}`)
-        .join("\n")}
-      
-      INTERVIEW Q&A:
-      ${data.qnas
-        .map(
-          (qna, index) => `
-      Q${index + 1}: ${qna.question}
-      A${index + 1}: ${qna.answer}
-      `
-        )
-        .join("\n")}
-    `;
+    setGeneratingPDF(true);
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPosition = margin;
 
-    const blob = new Blob([feedbackText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ai-feedback-${data.applicant.firstName}-${data.applicant.lastName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      // Add header
+      pdf.setFillColor(59, 130, 246); // Blue background
+      pdf.rect(0, 0, pageWidth, 40, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(20);
+      pdf.text("AI Interview Feedback Report", pageWidth / 2, 20, {
+        align: "center",
+      });
+      pdf.setFontSize(12);
+      pdf.text(
+        `Generated on ${new Date().toLocaleDateString()}`,
+        pageWidth / 2,
+        30,
+        { align: "center" }
+      );
+
+      yPosition = 50;
+
+      // Candidate Information
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(16);
+      pdf.text("Candidate Information", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      pdf.text(
+        `Name: ${data.applicant.firstName} ${data.applicant.lastName}`,
+        margin,
+        yPosition
+      );
+      yPosition += 8;
+      pdf.text(`Email: ${data.applicant.email}`, margin, yPosition);
+      yPosition += 8;
+      pdf.text(`Position: ${data.job.title}`, margin, yPosition);
+      yPosition += 15;
+
+      // Overall Assessment
+      pdf.setFontSize(16);
+      pdf.text("Overall Assessment", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      pdf.text(`Score: ${data.overallScore}/10`, margin, yPosition);
+      yPosition += 8;
+      pdf.text(`Status: ${data.applicationStatus}`, margin, yPosition);
+      yPosition += 15;
+
+      // Check if we need a new page
+      if (yPosition > pageHeight - 50) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Strengths
+      pdf.setFontSize(16);
+      pdf.text("Strengths", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      data.feedback.strengths.forEach((strength, index) => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(`${index + 1}. ${strength}`, margin + 5, yPosition);
+        yPosition += 8;
+      });
+      yPosition += 8;
+
+      // Check if we need a new page
+      if (yPosition > pageHeight - 50) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Areas for Improvement
+      pdf.setFontSize(16);
+      pdf.text("Areas for Improvement", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      data.feedback.improvements.forEach((improvement, index) => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        pdf.text(`${index + 1}. ${improvement}`, margin + 5, yPosition);
+        yPosition += 8;
+      });
+      yPosition += 15;
+
+      // Check if we need a new page
+      if (yPosition > pageHeight - 50) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Interview Q&A
+      pdf.setFontSize(16);
+      pdf.text("Interview Questions & Answers", margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      data.qnas.forEach((qna, index) => {
+        // Check if we need a new page before adding question
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`Q${index + 1}: ${qna.question}`, margin, yPosition);
+        yPosition += 8;
+
+        pdf.setFont("helvetica", "normal");
+        const answerLines = pdf.splitTextToSize(
+          `A: ${qna.answer}`,
+          pageWidth - 2 * margin
+        );
+        answerLines.forEach((line: string) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin + 5, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 8;
+      });
+
+      // Footer
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(
+        "Generated by AI Interview System",
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" }
+      );
+
+      pdf.save(
+        `ai-feedback-${data.applicant.firstName}-${data.applicant.lastName}.pdf`
+      );
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   if (loading) {
@@ -205,11 +325,16 @@ export default function FeedbackPage() {
               </p>
             </div>
             <Button
-              onClick={downloadFeedback}
+              onClick={generatePDF}
+              disabled={generatingPDF}
               className="bg-blue-600 hover:bg-blue-700 cursor-pointer mt-4 md:mt-0"
             >
-              <Download className="h-4 w-4 mr-2" />
-              Download Report
+              {generatingPDF ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              {generatingPDF ? "Generating PDF..." : "Download PDF Report"}
             </Button>
           </div>
         </div>
