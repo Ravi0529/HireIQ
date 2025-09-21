@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, User } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
-
-const getProfileCacheKey = (userId: string) => `recruiter:profile:${userId}`;
 
 export const GET = async () => {
   const session = await getServerSession(authOptions);
@@ -41,20 +38,6 @@ export const GET = async () => {
       );
     }
 
-    const cacheKey = getProfileCacheKey(user.id);
-    const cachedProfile = await redis.get(cacheKey);
-
-    if (cachedProfile) {
-      console.log("Serving recruiter profile from cache");
-      return new NextResponse(cachedProfile, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Cache": "HIT",
-        },
-      });
-    }
-
     const profile = await prisma.recruiterProfile.findUnique({
       where: {
         userId: user.id,
@@ -87,14 +70,10 @@ export const GET = async () => {
       profile,
     });
 
-    await redis.set(cacheKey, responseData, "EX", 86400);
-    console.log("Stored recruiter profile in cache");
-
     return new NextResponse(responseData, {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "X-Cache": "MISS",
       },
     });
   } catch (error) {
@@ -191,10 +170,6 @@ export const POST = async (req: NextRequest) => {
       : await prisma.recruiterProfile.create({
           data: payload,
         });
-
-    const cacheKey = getProfileCacheKey(user.id);
-    await redis.del(cacheKey);
-    console.log("Invalidated recruiter profile cache after update");
 
     return new NextResponse(
       JSON.stringify({

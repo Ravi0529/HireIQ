@@ -43,7 +43,6 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",
-    "ioredis": "^5.7.0",
     "jspdf": "^3.0.2",
     "lucide-react": "^0.539.0",
     "next": "15.4.6",

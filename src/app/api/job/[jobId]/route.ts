@@ -2,20 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, User } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
-
-const getParticularJobCacheKey = (id: string) => `job:${id}`;
-
-const invalidateJobCache = async (jobId: string) => {
-  await redis.del(getParticularJobCacheKey(jobId));
-  console.log(`Invalidated cache for job: ${jobId}`);
-
-  const jobListKeys = await redis.keys("jobs:page:*");
-  if (jobListKeys.length > 0) {
-    await redis.del(...jobListKeys);
-    console.log("Invalidated all jobs list cache");
-  }
-};
 
 export const GET = async (
   req: NextRequest,
@@ -39,20 +25,6 @@ export const GET = async (
   }
 
   try {
-    const cacheKey = getParticularJobCacheKey(jobId);
-    const cachedJob = await redis.get(cacheKey);
-
-    if (cachedJob) {
-      console.log("Serving job from cache");
-      return new NextResponse(cachedJob, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Cache": "HIT",
-        },
-      });
-    }
-
     const singleJobPost = await prisma.job.findUnique({
       where: {
         id: jobId,
@@ -95,14 +67,10 @@ export const GET = async (
 
     const responseData = JSON.stringify(singleJobPost);
 
-    await redis.set(cacheKey, responseData, "EX", 86400);
-    console.log("Stored job in cache");
-
     return new NextResponse(responseData, {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "X-Cache": "MISS",
       },
     });
   } catch (error) {
@@ -213,8 +181,6 @@ export const PUT = async (
       },
     });
 
-    await invalidateJobCache(jobId);
-
     return NextResponse.json({
       success: true,
       job: updatedJob,
@@ -308,8 +274,6 @@ export const PATCH = async (
         updatedAt: new Date(),
       },
     });
-
-    await invalidateJobCache(jobId);
 
     return NextResponse.json({
       success: true,
