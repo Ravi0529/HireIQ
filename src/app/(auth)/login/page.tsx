@@ -32,7 +32,7 @@ export default function LoginPage() {
     setError("");
     try {
       const response = await signIn("credentials", {
-        redirect: false,
+        redirect: true,
         email: emailAddress,
         password,
       });

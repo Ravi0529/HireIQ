@@ -51,7 +51,7 @@ export default function SignUpPage() {
         toast.success("Account created successfully!");
 
         const result = await signIn("credentials", {
-          redirect: false,
+          redirect: true,
           email: emailAddress,
           password,
         });
