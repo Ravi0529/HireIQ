@@ -52,10 +52,11 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.4.54",
     "prisma": "^6.14.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
     "react-speech-recognition": "^4.0.1",
     "recharts": "^3.1.2",
+    "scheduler": "^0.26.0",
     "sonner": "^2.0.7",
     "sooner": "^1.1.4",
     "tailwind-merge": "^3.3.1"

@@ -14,7 +14,10 @@ CREATE TYPE "public"."Status" AS ENUM ('Student', 'SeachingForJob', 'WorkingProf
 CREATE TYPE "public"."JobPreferences" AS ENUM ('SoftwareEngineer', 'WebDeveloper', 'DataAnalyst', 'DataScientist', 'UIUXDesigner', 'VideoEditor', 'Sales', 'Marketing', 'ProductManager', 'QAEngineer', 'DevOpsEngineer', 'BusinessAnalyst', 'ContentWriter', 'HR', 'CustomerSupport', 'Operations', 'Other');
 
 -- CreateEnum
-CREATE TYPE "public"."ApplicationStatus" AS ENUM ('Applied', 'Reviewing', 'Accepted', 'Rejected');
+CREATE TYPE "public"."ApplicationStatus" AS ENUM ('Applied', 'Accepted', 'Rejected');
+
+-- CreateEnum
+CREATE TYPE "public"."JobStatus" AS ENUM ('Open', 'Closed');
 
 -- CreateEnum
 CREATE TYPE "public"."WorkStatus" AS ENUM ('Remote', 'Offline');
@@ -25,7 +28,9 @@ CREATE TABLE "public"."User" (
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "role" "public"."Role" NOT NULL,
+    "role" "public"."Role" NOT NULL DEFAULT 'applicant',
+    "password" TEXT NOT NULL,
+    "image" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -79,6 +84,7 @@ CREATE TABLE "public"."Job" (
     "salary" TEXT NOT NULL,
     "requiredSkills" TEXT[],
     "workStatus" "public"."WorkStatus" NOT NULL,
+    "status" "public"."JobStatus" NOT NULL DEFAULT 'Open',
     "createdById" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -94,6 +100,7 @@ CREATE TABLE "public"."Application" (
     "applicantId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "overallScore" INTEGER,
 
     CONSTRAINT "Application_pkey" PRIMARY KEY ("id")
 );
@@ -120,6 +127,29 @@ CREATE TABLE "public"."QnA" (
     CONSTRAINT "QnA_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."Feedback" (
+    "id" TEXT NOT NULL,
+    "applicationId" TEXT NOT NULL,
+    "strengths" TEXT[],
+    "improvements" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Feedback_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Analysis" (
+    "id" TEXT NOT NULL,
+    "applicationId" TEXT NOT NULL,
+    "aiAnalysis" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Analysis_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
 
@@ -128,6 +158,15 @@ CREATE UNIQUE INDEX "RecruiterProfile_userId_key" ON "public"."RecruiterProfile"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ApplicantProfile_userId_key" ON "public"."ApplicantProfile"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "InterviewInfo_applicationId_key" ON "public"."InterviewInfo"("applicationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Feedback_applicationId_key" ON "public"."Feedback"("applicationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Analysis_applicationId_key" ON "public"."Analysis"("applicationId");
 
 -- AddForeignKey
 ALTER TABLE "public"."RecruiterProfile" ADD CONSTRAINT "RecruiterProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -149,3 +188,9 @@ ALTER TABLE "public"."InterviewInfo" ADD CONSTRAINT "InterviewInfo_applicationId
 
 -- AddForeignKey
 ALTER TABLE "public"."QnA" ADD CONSTRAINT "QnA_interviewInfoId_fkey" FOREIGN KEY ("interviewInfoId") REFERENCES "public"."InterviewInfo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Feedback" ADD CONSTRAINT "Feedback_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "public"."Application"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Analysis" ADD CONSTRAINT "Analysis_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "public"."Application"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
