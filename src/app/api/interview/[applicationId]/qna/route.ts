@@ -45,7 +45,7 @@ const generateFirstQuestion = async ({
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: prompt },
         {
@@ -113,7 +113,7 @@ const generateNextQuestion = async ({
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: prompt },
         { role: "user", content: "Please provide the next question." },
